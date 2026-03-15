@@ -18,7 +18,7 @@ class NhvrApiClient:
             headers["Ocp-Apim-Subscription-Key"] = self.api_key
 
         url = f"{self.base_url}/vehicles/registration/{plate_number}"
-        async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx.AsyncClient(timeout=60) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             return response.json()

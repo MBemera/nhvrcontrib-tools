@@ -36,7 +36,7 @@ async def fetch_page_http(url: str) -> str:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-AU,en;q=0.9",
     }
-    async with httpx.AsyncClient(timeout=30, headers=headers) as client:
+    async with httpx.AsyncClient(timeout=60, headers=headers) as client:
         response = await client.get(url)
         response.raise_for_status()
         return response.text
@@ -60,7 +60,8 @@ async def fetch_page_playwright(url: str) -> str:
             java_script_enabled=True,
         )
         page = await context.new_page()
-        await page.goto(url, wait_until="networkidle", timeout=30000)
+        # Change wait_until to "load" and increase timeout to 60 seconds
+        await page.goto(url, wait_until="load", timeout=60000)
         html = await page.content()
         await context.close()
         await browser.close()
