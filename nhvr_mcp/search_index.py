@@ -116,8 +116,11 @@ SEARCH_TOPICS: tuple[SearchTopic, ...] = (
             "breach categories",
             "breach categorisation",
             "mass breach",
+            "mass breach categories",
             "fatigue breach",
+            "fatigue breach categories",
             "dimension breach",
+            "dimension breach categories",
         ),
         scraper_name="scrape_breach_categorisation",
         knowledge_key="breach_categories",
@@ -147,9 +150,13 @@ SEARCH_TOPICS: tuple[SearchTopic, ...] = (
             "accreditation",
             "mass management accreditation",
             "fatigue management accreditation",
+            "fatigue accreditation",
             "maintenance management",
             "nhvas fatigue",
+            "nhvas fatigue accreditation",
             "nhvas mass",
+            "nhvas mass accreditation",
+            "nhvas maintenance accreditation",
         ),
         scraper_name="scrape_nhvas_info",
         knowledge_key="accreditation_info",
@@ -213,7 +220,8 @@ def find_topic_match(query: str) -> TopicMatch | None:
     for topic in SEARCH_TOPICS:
         for alias in topic.aliases:
             score = _score_alias_match(normalized_query, alias)
-            if best_match is None or score > best_match.score:
+            candidate_match = TopicMatch(topic=topic, alias=alias, score=score)
+            if best_match is None or _match_priority(candidate_match) > _match_priority(best_match):
                 best_match = TopicMatch(topic=topic, alias=alias, score=score)
 
     if best_match and best_match.score >= 0.55:
@@ -235,7 +243,7 @@ def suggest_topics(query: str, limit: int = 3) -> list[dict[str, str]]:
         )
 
     suggestions: list[dict[str, str]] = []
-    for match in sorted(scored_topics, key=lambda item: item.score, reverse=True)[:limit]:
+    for match in sorted(scored_topics, key=_match_priority, reverse=True)[:limit]:
         suggestions.append(
             {
                 "topic": match.topic.title,
@@ -267,3 +275,12 @@ def _score_alias_match(normalized_query: str, alias: str) -> float:
 
     similarity = difflib.SequenceMatcher(None, normalized_query, normalized_alias).ratio()
     return max(token_score * 0.85, similarity * 0.75)
+
+
+def _match_priority(match: TopicMatch) -> tuple[float, int, int]:
+    normalized_alias = normalize_search_query(match.alias)
+    return (
+        match.score,
+        len(normalized_alias.split()),
+        len(normalized_alias),
+    )

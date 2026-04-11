@@ -17,15 +17,28 @@ FATIGUE_RULES = {
             "in_any_11_hours": "Max 10 hours work, then ≥60 min rest in blocks ≥15 min",
             "in_any_24_hours": "Max 12 hours work, then ≥7 continuous hours stationary rest",
             "in_any_7_days": "Max 72 hours work, then ≥24 continuous hours stationary rest",
-            "in_any_14_days": "Max 144 hours work; must have ≥2 night rest breaks and ≥2 night rests in any 14 days",
+            "in_any_14_days": (
+                "Max 144 hours work; must have 2 night rest breaks and "
+                "2 night rest breaks taken on consecutive days"
+            ),
         },
         "two_up_driver": {
             "in_any_5.5_hours": "Max 5 hours 15 min work, then ≥15 min continuous rest",
-            "in_any_8.5_hours": "Max 8 hours work, then ≥30 min rest in blocks ≥15 min",
+            "in_any_8_hours": "Max 7 hours 30 min work, then ≥30 min rest in blocks ≥15 min",
             "in_any_11_hours": "Max 10 hours work, then ≥60 min rest in blocks ≥15 min",
-            "in_any_24_hours": "Max 12 hours work, then ≥7 continuous hours stationary rest",
-            "in_any_7_days": "Max 72 hours work, then ≥24 continuous hours stationary rest",
-            "in_any_14_days": "Max 144 hours work; must have night rest requirements met",
+            "in_any_24_hours": (
+                "Max 12 hours work, then ≥5 continuous hours stationary rest or "
+                "≥5 continuous hours rest in an approved sleeper berth while the vehicle is moving"
+            ),
+            "in_any_52_hours": "No work cap specified; must have ≥10 continuous hours stationary rest",
+            "in_any_7_days": (
+                "Max 60 hours work; must have ≥24 continuous hours stationary rest and "
+                "a further 24 hours stationary rest in blocks of at least 7 continuous hours"
+            ),
+            "in_any_14_days": (
+                "Max 120 hours work; must have 2 night rest breaks and "
+                "2 night rest breaks taken on consecutive days"
+            ),
         },
         "night_rest": "7 continuous hours stationary rest between 10pm and 8am (base time zone).",
     },
@@ -33,73 +46,133 @@ FATIGUE_RULES = {
         "summary": "Basic Fatigue Management – NHVAS module allowing more flexible work/rest hours.",
         "solo_driver": {
             "in_any_6.25_hours": "Max 6 hours work, then ≥15 min continuous rest",
-            "in_any_9.25_hours": "Max 8 hours 45 min work, then ≥30 min rest in blocks ≥15 min",
-            "in_any_12.25_hours": "Max 11 hours 15 min work, then ≥60 min rest in blocks ≥15 min",
-            "in_any_24_hours": "Max 14 hours work, then ≥7 continuous hours stationary rest",
-            "in_any_7_days": "Max 36 hours long/night work; max 84 hours total work",
-            "in_any_14_days": "Max 144 hours work; night rest requirements apply",
-        },
-        "two_up_driver": {
-            "in_any_5.5_hours": "Max 5 hours 15 min work, then ≥15 min continuous rest",
-            "in_any_8.5_hours": "Max 8 hours work, then ≥30 min rest in blocks ≥15 min",
+            "in_any_9_hours": "Max 8 hours 30 min work, then ≥30 min rest in blocks ≥15 min",
             "in_any_12_hours": "Max 11 hours work, then ≥60 min rest in blocks ≥15 min",
             "in_any_24_hours": "Max 14 hours work, then ≥7 continuous hours stationary rest",
-            "in_any_7_days": "Max 84 hours work",
-            "in_any_14_days": "Max 144 hours work; night rest requirements apply",
+            "in_any_7_days": (
+                "Max 36 hours long/night work time; no separate rest minimum is "
+                "set for that 7-day period"
+            ),
+            "in_any_14_days": (
+                "Max 144 hours work; must have 24 continuous hours stationary "
+                "rest after no more than 84 hours work time, plus a further "
+                "24 continuous hours stationary rest, 2 night rest breaks, and "
+                "2 night rest breaks taken on consecutive days"
+            ),
+        },
+        "two_up_driver": {
+            "in_any_24_hours": "Max 14 hours work; no minimum rest break is set in that 24-hour period",
+            "in_any_82_hours": "No work cap specified; must have ≥10 continuous hours stationary rest",
+            "in_any_7_days": (
+                "Max 70 hours work; must have ≥24 continuous hours stationary rest and "
+                "a further 24 hours stationary rest in blocks of at least 7 continuous hours"
+            ),
+            "in_any_14_days": "Max 140 hours work; must have 4 night rest breaks",
         },
         "requirement": "Operator must hold NHVAS BFM accreditation.",
     },
     "afm": {
-        "summary": "Advanced Fatigue Management – tailored work/rest hours via risk management.",
+        "summary": "Advanced Fatigue Management – tailored work/rest hours via an NHVR-assessed safety case.",
         "description": (
-            "AFM provides tailored work and rest hours through an accredited fatigue risk "
-            "management system. Specific hours are set per operator's AFM accreditation. "
-            "Outer limits: max 16 hours work in 24 hours, max 168 hours in 14 days."
+            "AFM is currently the only mechanism under the HVNL that can provide tailored "
+            "work and rest hours. Applications are assessed against fatigue principles, "
+            "the operator's proposed controls, and the risks of the specific operation."
         ),
-        "requirement": "Operator must hold NHVAS AFM accreditation with approved operating schedules.",
+        "requirement": (
+            "Operator must hold NHVAS Fatigue Management accreditation with "
+            "approved AFM work and rest hours."
+        ),
     },
 }
 
 MASS_LIMITS = {
     "general": {
-        "summary": "General Mass Limits (GML) – basic limits for all heavy vehicles.",
-        "steer_axle": "6.0 t (single tyre), 6.5 t (dual tyre)",
+        "summary": (
+            "General Mass Limits (GML) – default statutory mass limits, subject "
+            "to manufacturer and axle spacing limits."
+        ),
+        "steer_axle": "6.0 t by default; 6.5 t for a complying steer axle vehicle",
         "single_axle_dual_tyres": "9.0 t",
         "tandem_axle_group": "16.5 t",
         "tri_axle_group": "20.0 t",
-        "quad_axle_group": "Not available at GML",
-        "gross_combination_mass": "Up to 42.5 t for B-double (GML)",
+        "general_access_examples": (
+            "Common general access examples include a rigid vehicle up to 31 t, "
+            "a prime mover and semitrailer up to 42.5 t, a rigid truck and trailer up to 42.5 t, "
+            "and a 19 m B-double up to 42.5 t"
+        ),
+        "b_double_26m_example": (
+            "A 26 m B-double can operate up to 62.5 t under GML if it meets "
+            "axle spacing and notice conditions"
+        ),
     },
     "cml": {
-        "summary": "Concessional Mass Limits (CML) – above GML with NHVAS accreditation.",
-        "requirement": "NHVAS Mass Management accreditation and road-friendly suspension.",
+        "summary": (
+            "Concessional Mass Limits (CML) – above GML for eligible vehicles "
+            "operating under NHVAS Mass Management."
+        ),
+        "requirement": (
+            "NHVAS Mass Management accreditation and compliance with the CML "
+            "axle group tables and gross mass caps."
+        ),
         "tandem_axle_group": "17.0 t",
         "tri_axle_group": "21.0 t",
+        "gross_mass_concession": (
+            "Up to 1 t above GML for a vehicle or combination with allowable gross mass up to 55 t, "
+            "or up to 2 t above GML if allowable gross mass exceeds 55 t"
+        ),
     },
     "hml": {
-        "summary": "Higher Mass Limits (HML) – highest limits for eligible vehicles.",
-        "requirement": "NHVAS Mass Management accreditation, approved routes, road-friendly suspension.",
-        "tandem_axle_group": "18.0 t (drive), 17.0 t (other)",
-        "tri_axle_group": "22.5 t (with road-friendly suspension)",
-        "b_double_gross": "Up to 62.5 t (on approved routes)",
+        "summary": "Higher Mass Limits (HML) – increased axle group limits for eligible vehicles on authorised routes.",
+        "requirement": (
+            "Vehicles or combinations running at HML on triaxle groups must be accredited under NHVAS Mass Management, "
+            "be fitted with certified road-friendly suspension, and travel on an authorised route"
+        ),
+        "tandem_axle_group": "17.0 t",
+        "tri_axle_group": "22.5 t",
+        "single_drive_axle_bus": "10.0 t",
+        "six_tyred_tandem_axle_group": "14.0 t",
+        "note": "Combination mass still depends on axle spacing, manufacturer limits, and notice or permit conditions",
     },
 }
 
 DIMENSION_LIMITS = {
-    "height": "4.3 m maximum (4.6 m for double-deck livestock carriers on approved routes).",
-    "width": "2.5 m maximum (refrigerated vehicles may have 2.55 m exemption).",
+    "height": (
+        "4.3 m generally. Exceptions include livestock vehicles, vehicles built "
+        "with at least 2 decks for carrying vehicles, and specified "
+        "semitrailers at up to 4.6 m, plus double-decker buses at up to 4.4 m"
+    ),
+    "width": (
+        "2.5 m generally. 2.55 m only applies to Safer Freight Vehicles "
+        "(certain new rigid or cab chassis trucks and prime movers) and combinations that include them"
+    ),
     "length": {
-        "rigid_vehicle": "12.5 m",
-        "articulated_vehicle": "19.0 m",
-        "b_double": "26.0 m",
-        "road_train": "36.5 m (Type 1), 53.5 m (Type 2)",
+        "other_vehicle": "12.5 m",
+        "combination_other_than_b_double_road_train_or_vehicle_carrier": "19.0 m",
+        "b_double": (
+            "25.0 m generally; up to 26.0 m if the additional prime mover and "
+            "articulation-point conditions are met"
+        ),
+        "road_train": "53.5 m",
+        "vehicle_carrier": "25.0 m",
+        "articulated_bus": "18.0 m",
+        "bus_other_than_articulated": "14.5 m",
     },
     "rear_overhang": {
-        "general": "Rear overhang must not exceed 60% of the wheelbase or 3.7 m (whichever is less).",
-        "note": "Specific limits apply for different vehicle configurations.",
+        "general": (
+            "Rear overhang is often the lesser of 3.7 m or 60% of the wheelbase or 'S' dimension, "
+            "depending on the vehicle type"
+        ),
+        "note": "Pig trailers and vehicle carriers have specific alternative rear overhang rules",
     },
-    "front_overhang": "Measured from the centre of the front axle. Limits vary by vehicle type.",
-    "ground_clearance": "Minimum ground clearance requirements apply to trailers.",
+    "front_overhang": (
+        "Front and side projection limits depend on the vehicle and load "
+        "configuration. Check the NHVR size and projection guidance for "
+        "measurements."
+    ),
+    "ground_clearance": (
+        "Ground clearance is a prescribed MDL dimension requirement. Check the "
+        "current NHVR guidance for the relevant vehicle or trailer type."
+    ),
 }
 
 BREACH_CATEGORIES = {
@@ -133,16 +206,21 @@ BREACH_CATEGORIES = {
 
 SPEED_LIMITS = {
     "default": {
-        "heavy_vehicle_speed_limit": "100 km/h (general maximum for heavy vehicles unless otherwise signed).",
-        "school_zones": "40 km/h (during school zone hours).",
+        "heavy_vehicle_speed_limit": (
+            "Drivers must comply with posted limits and road rules. "
+            "NHVR speed compliance materials specifically cover heavy vehicles exceeding 100 km/h"
+        ),
         "note": (
-            "Speed limits are primarily governed by state/territory road rules. "
-            "The HVNL applies to heavy vehicle speed compliance and enforcement."
+            "Speed compliance is primarily governed by road rules and vehicle standards. "
+            "NHVR materials also emphasise the safety risk of heavy vehicles travelling above 100 km/h"
         ),
     },
     "speed_limiter": {
-        "requirement": "Heavy vehicles with a GVM >12 tonnes must have a speed limiter set to 100 km/h.",
-        "reference": "HVNL Part 4.5",
+        "requirement": (
+            "If a heavy vehicle is required to have a speed limiter fitted, it must not be tampered with "
+            "and should not be capable of travelling above 100 km/h"
+        ),
+        "reference": "NHVR illegal engine remapping and speed limiter tampering guidance",
     },
 }
 
@@ -190,12 +268,17 @@ COR_DUTIES = {
 
 ACCREDITATION_INFO = {
     "overview": (
-        "The National Heavy Vehicle Accreditation Scheme (NHVAS) recognises operators "
-        "with effective safety management systems. Transitioning to HVA scheme from mid-2026."
+        "The NHVAS is a national formal process for recognising operators with "
+        "robust safety management systems. From mid-2026, NHVAS will be "
+        "progressively replaced by the HVA scheme, with the NHVR working "
+        "towards implementation readiness by 1 July 2026."
     ),
     "mass": {
         "summary": "NHVAS Mass Management module.",
-        "benefit": "Access to Concessional Mass Limits (CML) and Higher Mass Limits (HML).",
+        "benefit": (
+            "Access to Concessional Mass Limits (CML) and, where other "
+            "conditions are met, Higher Mass Limits (HML)."
+        ),
         "requirement": "Audited mass management system.",
     },
     "maintenance": {
@@ -211,45 +294,85 @@ ACCREDITATION_INFO = {
 }
 
 PERMIT_TYPES = {
-    "overview": "Access permits allow vehicles that exceed standard limits to travel on approved routes.",
+    "overview": (
+        "Restricted access vehicles may operate under notices or require "
+        "permits depending on the vehicle class, network, and route."
+    ),
     "class_1": {
-        "summary": "Class 1 heavy vehicle – special-purpose vehicle (e.g. crane, agricultural).",
+        "summary": (
+            "Class 1 heavy vehicles commonly include agricultural vehicles, "
+            "oversize overmass vehicles, and special purpose vehicles."
+        ),
         "note": (
             "Conditions set by the permit; may include route restrictions, "
             "time-of-travel, and escort requirements."
         ),
     },
     "class_2": {
-        "summary": "Class 2 heavy vehicle – a general access vehicle operating under a notice.",
-        "note": "Class 2 notices provide blanket access on approved networks.",
+        "summary": (
+            "Class 2 heavy vehicles commonly include B-doubles, B-triples, road trains, controlled access buses, "
+            "livestock vehicles, vehicle carriers, and PBS vehicles"
+        ),
+        "note": (
+            "Class 2 vehicles typically operate under notices on approved "
+            "networks and need permits when travelling outside those networks."
+        ),
     },
     "class_3": {
-        "summary": "Class 3 heavy vehicle – restricted access vehicle requiring a specific permit.",
-        "note": "Route-specific permits with conditions tailored to the vehicle and journey.",
+        "summary": (
+            "A Class 3 heavy vehicle is one that, together with its load, does "
+            "not comply with prescribed mass or dimension requirements and is "
+            "not a Class 1 heavy vehicle"
+        ),
+        "note": (
+            "Route-specific permits are common. Examples include certain "
+            "overmass rigid truck and dog combinations, wide B-doubles or road "
+            "trains, tow trucks, and some dolly combinations."
+        ),
     },
     "hml": {
-        "summary": "HML permit – allows operation at Higher Mass Limits on approved routes.",
-        "requirement": "NHVAS Mass Management accreditation, road-friendly suspension.",
+        "summary": (
+            "HML permits are used to access roads beyond authorised HML routes "
+            "or to operate an HML configuration not covered by a notice."
+        ),
+        "requirement": "Road manager consent is required before the NHVR can issue the permit.",
     },
     "oversize": {
-        "summary": "Oversize/overmass permits for loads exceeding standard dimension or mass limits.",
-        "requirement": "Permit application via NHVR Portal specifying vehicle, load, and route details.",
+        "summary": (
+            "Oversize/overmass permits usually fall under Class 1 access where "
+            "the vehicle or load does not comply with relevant notices or "
+            "leaves the approved network."
+        ),
+        "requirement": (
+            "Permit applications are assessed against the relevant vehicle "
+            "standards, route, and operating conditions."
+        ),
     },
 }
 
 HML_INFO = {
     "eligibility": {
-        "summary": "Vehicles must be NHVAS Mass Management accredited with road-friendly suspension.",
+        "summary": (
+            "Vehicles or combinations running at HML on triaxle groups must be accredited under NHVAS Mass Management, "
+            "be fitted with certified road-friendly suspension, and travel on an authorised route"
+        ),
         "approved_routes": "Only on routes approved by road managers for HML operations.",
-        "vehicle_requirements": "Compliant suspension, tyres, and axle configuration.",
+        "vehicle_requirements": (
+            "Certified road-friendly suspension and compliance with the "
+            "relevant notice or permit conditions."
+        ),
     },
     "limits": {
-        "tandem_axle_drive": "18.0 t",
-        "tandem_axle_other": "17.0 t",
+        "tandem_axle_group": "17.0 t",
         "tri_axle_group": "22.5 t",
-        "b_double_gross": "Up to 62.5 t",
+        "single_drive_axles_on_buses": "10.0 t",
+        "six_tyred_tandem_axle_groups": "14.0 t",
     },
-    "application": "Apply via the NHVR Portal (NHVR Go).",
+    "application": (
+        "Apply for an HML permit if you need access beyond authorised HML "
+        "routes or want to use an HML vehicle configuration that is not "
+        "covered by a notice"
+    ),
 }
 
 UNOFFICIAL_WARNING = "This is an unofficial summary. Verify requirements against current NHVR and HVNL sources."

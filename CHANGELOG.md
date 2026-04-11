@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added clearer user-facing API and scraper error messages for missing API keys, invalid plates, auth failures, timeouts, unavailable services, and missing Playwright
 - Improved markdown response formatting for terminal and assistant output
 - Added provenance metadata to static knowledge responses
+- Manually re-verified static knowledge against live official NHVR guidance on 2026-04-11 and corrected fatigue, HML, dimension, accreditation, and permit summaries
 - Updated Docker defaults so the image installs the MCP extra and can start the server reliably
 - Expanded automated test coverage for CLI, search, formatter, and graceful failure paths
 
