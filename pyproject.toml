@@ -66,6 +66,7 @@ dev = [
 
 [project.scripts]
 nhvr = "nhvr_mcp.cli:main"
+nhvr-setup = "nhvr_mcp.install_wizard:main"
 
 [project.urls]
 Homepage = "https://github.com/MBemera/nhvr-tools"

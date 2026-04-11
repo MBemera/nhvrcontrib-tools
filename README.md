@@ -8,254 +8,291 @@
 [![CI](https://github.com/MBemera/nhvr-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/MBemera/nhvr-tools/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-```bash
-pip install nhvr-tools
-```
+`nhvr-tools` gives you quick access to fatigue rules, mass limits, dimension limits, chain of responsibility duties, accreditation guidance, permits, breach categories, and NHVR registration lookups.
 
-NHVR Tools gives you instant access to Australian heavy vehicle compliance information — fatigue rules, mass limits, dimension limits, breach categories, chain of responsibility duties, accreditation, permits, and more.
+The PyPI package name is `nhvr-tools`. The Python import path is `nhvr_mcp`.
 
-**Three ways to use it:**
+## Choose Your Install Path
 
-| Interface | For | Install |
-|-----------|-----|---------|
-| **Python SDK** | Developers building apps | `pip install nhvr-tools` |
-| **MCP Server** | AI assistants (Claude, etc.) | `pip install nhvr-tools[mcp]` |
-| **CLI** | Terminal users | `pip install nhvr-tools[cli]` |
+| Use case | Install command |
+| --- | --- |
+| Python SDK only | `pip install nhvr-tools` |
+| CLI | `pip install "nhvr-tools[cli]"` |
+| MCP server for Claude/Desktop clients | `pip install "nhvr-tools[mcp]"` |
+| Live NHVR page scraping | `pip install "nhvr-tools[scraper]"` |
+| Everything | `pip install "nhvr-tools[all]"` |
 
----
-
-## Quick Start
-
-### Install
+## Install From PyPI
 
 ```bash
-# SDK only (minimal dependencies)
+# SDK only
 pip install nhvr-tools
 
-# Everything (SDK + MCP server + CLI + scraper)
-pip install nhvr-tools[all]
+# CLI
+pip install "nhvr-tools[cli]"
+
+# MCP server
+pip install "nhvr-tools[mcp]"
+
+# Full install
+pip install "nhvr-tools[all]"
 ```
 
-### Python SDK
+### Optional Playwright Install
 
-```python
-from nhvr_mcp import NHVR
-
-client = NHVR()
-
-# Fatigue rules
-rules = client.fatigue_rules(scheme="standard")
-print(rules["solo_driver"])
-
-# Mass limits (with HML)
-limits = client.mass_limits(include_hml=True)
-print(limits["hml"]["b_double_gross"])  # "Up to 62.5 t"
-
-# Dimension limits
-dims = client.dimension_limits()
-print(dims["height"])  # "4.3 m maximum ..."
-
-# Breach categories
-breaches = client.breach_categories(breach_type="mass")
-
-# Chain of Responsibility
-cor = client.cor_duties(role="operator")
-
-# All other lookups
-speed = client.speed_limits()
-accred = client.accreditation(module="mass")
-permits = client.permit_types(permit_type="class_1")
-hml = client.hml_info()
-```
-
-#### Async Methods (Network)
-
-```python
-import asyncio
-from nhvr_mcp import NHVR
-
-client = NHVR(api_key="your-nhvr-api-key")  # or set NHVR_API_KEY env var
-
-# Vehicle registration lookup
-rego = asyncio.run(client.search_registration("ABC123"))
-
-# Search NHVR regulations (scrapes nhvr.gov.au)
-results = asyncio.run(client.search("fatigue management"))
-
-# Scrape a specific NHVR page
-page = asyncio.run(client.scrape("https://www.nhvr.gov.au/road-access/mass-and-dimension/mass-limits"))
-```
-
----
-
-## API Reference
-
-### `NHVR(api_key=None)`
-
-Create a client. The API key is optional — only needed for vehicle registration lookups. Falls back to the `NHVR_API_KEY` environment variable.
-
-### Sync Methods
-
-All sync methods return Python dicts from the built-in knowledge base. No network calls, no API key required.
-
-| Method | Parameters | Returns |
-|--------|-----------|---------|
-| `fatigue_rules(scheme)` | `scheme`: `"standard"`, `"bfm"`, or `"afm"` | Fatigue work/rest rules |
-| `mass_limits(include_hml)` | `include_hml`: bool (default `False`) | General + optional HML limits |
-| `dimension_limits()` | — | Height, width, length limits |
-| `breach_categories(breach_type)` | `breach_type`: `"mass"`, `"dimension"`, `"fatigue"`, `"speed"`, `"loading"`, or `None` for all | Breach severity categories |
-| `speed_limits()` | — | Speed limits and limiter rules |
-| `cor_duties(role)` | `role`: `"operator"`, `"driver"`, `"primary_duty"`, etc. or `None` for all | Chain of Responsibility duties |
-| `accreditation(module)` | `module`: `"mass"`, `"maintenance"`, `"fatigue"`, or `None` for all | NHVAS accreditation info |
-| `permit_types(permit_type)` | `permit_type`: `"class_1"`, `"class_2"`, `"class_3"`, `"hml"`, `"oversize"`, or `None` for all | Access permit information |
-| `hml_info()` | — | Higher Mass Limits eligibility, limits, application |
-
-### Async Methods
-
-These methods make network requests and must be `await`ed.
-
-| Method | Parameters | Returns |
-|--------|-----------|---------|
-| `search_registration(plate_number)` | `plate_number`: str | Vehicle registration data from NHVR API |
-| `search(query)` | `query`: str (e.g. `"fatigue"`, `"mass"`, `"cor"`) | Scraped NHVR page matching the topic |
-| `scrape(url)` | `url`: str (must be nhvr.gov.au) | Parsed page content (text, tables, links) |
-
----
-
-## MCP Server (for AI Assistants)
-
-### Easy Setup
+Playwright is only needed for live NHVR page scraping. Base imports, SDK usage, CLI help, knowledge-base commands, and MCP server startup do not require it.
 
 ```bash
-pip install nhvr-tools[mcp]
-python setup.py
+pip install "nhvr-tools[scraper]"
+playwright install chromium
 ```
 
-The setup wizard handles everything — installs dependencies, configures Claude Desktop, and verifies the server works.
+If Playwright is missing, scraper-specific features fail with a readable message and install hint.
 
-### Manual Setup
+## Install From Source
 
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+```bash
+git clone https://github.com/MBemera/nhvr-tools.git
+cd nhvr-tools
+
+# Pick the extra you need
+pip install -e ".[mcp]"
+pip install -e ".[cli]"
+pip install -e ".[dev]"
+```
+
+## MCP Setup For Claude Desktop
+
+Recommended path:
+
+```bash
+pip install "nhvr-tools[mcp]"
+nhvr-setup
+```
+
+`nhvr-setup` checks the MCP dependency, offers optional API key and Playwright guidance, writes the Claude Desktop config, and verifies that the server imports correctly.
+
+### Manual Claude Desktop Config
+
+Add this to your Claude Desktop config:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "nhvr-tools": {
       "command": "python3",
-      "args": ["/path/to/nhvr-tools/nhvr_mcp/server.py"]
+      "args": ["-m", "nhvr_mcp.server"]
     }
   }
 }
 ```
 
-### Run Standalone
+If you use registration lookups, add `NHVR_API_KEY` to the server `env` block.
+
+### Run The MCP Server Directly
 
 ```bash
-# stdio (default, for Claude Desktop)
+# stdio transport
 python -m nhvr_mcp.server
 
-# HTTP (for remote/web clients)
-NHVR_MCP_TRANSPORT=streamable_http NHVR_MCP_PORT=8080 python -m nhvr_mcp.server
+# HTTP transport
+NHVR_MCP_TRANSPORT=streamable_http \
+NHVR_MCP_HOST=0.0.0.0 \
+NHVR_MCP_PORT=8080 \
+python -m nhvr_mcp.server
 ```
 
 ### Available MCP Tools
 
 | Tool | Description |
-|------|-------------|
-| `nhvr_get_fatigue_rules` | Work/rest hour requirements by scheme |
+| --- | --- |
+| `nhvr_get_fatigue_rules` | Work and rest hour requirements by scheme |
 | `nhvr_get_mass_limits` | General and HML mass limits |
-| `nhvr_get_dimension_limits` | Vehicle height, width, length limits |
+| `nhvr_get_dimension_limits` | Vehicle dimension limits |
 | `nhvr_get_breach_categories` | Breach severity categories |
 | `nhvr_get_speed_limits` | Speed limits and speed limiter rules |
 | `nhvr_get_cor_duties` | Chain of Responsibility duties |
-| `nhvr_get_accreditation_info` | NHVAS accreditation modules |
+| `nhvr_get_accreditation_info` | NHVAS accreditation information |
 | `nhvr_get_permit_types` | Access permit types |
-| `nhvr_get_hml_info` | Higher Mass Limits info |
-| `nhvr_search_vehicle_registration` | Look up a vehicle by plate number |
-| `nhvr_search_regulations` | Search NHVR topics by keyword |
-| `nhvr_scrape_page` | Scrape any nhvr.gov.au page |
-
-### Example Questions for Claude
-
-- "What are the standard fatigue rules for heavy vehicle drivers?"
-- "What are the mass limits for a B-double?"
-- "Explain chain of responsibility duties for a consignor"
-- "What are the breach categories for mass offences?"
-- "What do I need for NHVAS mass management accreditation?"
-
----
+| `nhvr_get_hml_info` | Higher Mass Limits guidance |
+| `nhvr_search_vehicle_registration` | Vehicle registration lookup |
+| `nhvr_search_regulations` | Natural-language topic search with fallback suggestions |
+| `nhvr_scrape_page` | Scrape a specific `nhvr.gov.au` page |
 
 ## CLI
 
 ```bash
-pip install nhvr-tools[cli]
+pip install "nhvr-tools[cli]"
 ```
 
 ```bash
-nhvr fatigue rules                        # Standard fatigue rules
-nhvr fatigue rules --scheme bfm           # BFM fatigue rules
-nhvr mass limits                          # General mass limits
-nhvr mass limits --include-hml            # Include HML
-nhvr mass hml                             # HML details
-nhvr dimension limits                     # Dimension limits
-nhvr breach categories                    # All breach categories
-nhvr breach categories --type mass        # Mass breaches only
-nhvr speed                                # Speed limits
-nhvr cor duties                           # All CoR duties
-nhvr cor duties --role operator           # Operator duties
-nhvr accreditation                        # All NHVAS modules
-nhvr accreditation --module mass          # Mass management
-nhvr permits                              # All permit types
-nhvr permits --type class_1               # Class 1 permits
-nhvr rego ABC123                          # Vehicle registration lookup
-nhvr search "fatigue management"          # Search NHVR topics
-nhvr scrape "https://www.nhvr.gov.au/..." # Scrape a page
-
-# Output as JSON
+nhvr fatigue rules
+nhvr fatigue rules --scheme bfm
+nhvr mass limits --include-hml
+nhvr mass hml
+nhvr dimension limits
+nhvr breach categories --type mass
+nhvr speed
+nhvr cor duties --role operator
+nhvr accreditation --module fatigue
+nhvr permits --type oversize
+nhvr rego ABC123
+nhvr search "rest breaks"
+nhvr scrape "https://www.nhvr.gov.au/road-access/access-permits"
 nhvr --format json fatigue rules
 ```
 
----
+Search now uses alias and fuzzy topic matching. Queries like `bfm`, `afm`, `rest breaks`, `b-double mass`, `executive due diligence`, `speed limiter`, and `oversize permits` map more reliably to relevant NHVR topics. If there is no strong match, the CLI returns a few likely topics instead of a dead end.
+
+## Python SDK
+
+```python
+from nhvr_mcp import NHVR
+
+client = NHVR()
+
+fatigue = client.fatigue_rules("bfm")
+mass = client.mass_limits(include_hml=True)
+dimensions = client.dimension_limits()
+cor = client.cor_duties("operator")
+permits = client.permit_types("oversize")
+```
+
+Static knowledge responses include provenance metadata:
+
+- `source_title`
+- `source_url`
+- `last_verified`
+- `unofficial_warning`
+
+### Async SDK Methods
+
+```python
+import asyncio
+from nhvr_mcp import NHVR
+
+client = NHVR(api_key="your-nhvr-api-key")
+
+rego = asyncio.run(client.search_registration("ABC123"))
+search = asyncio.run(client.search("b-double mass"))
+page = asyncio.run(client.scrape("https://www.nhvr.gov.au/road-access/mass-and-dimension/mass-limits"))
+```
+
+`search_registration()` needs an NHVR API key. `search()` and `scrape()` may use Playwright for live NHVR pages. If live scraping is unavailable, topic search falls back to the built-in knowledge base where possible.
 
 ## Docker
 
+The default image runs the MCP server with the `mcp` extra installed. It is intended for MCP clients, not for interactive CLI use.
+
 ```bash
 docker build -t nhvr-tools .
-docker run nhvr-tools
 ```
 
----
+### Run MCP Over Stdio
+
+Use stdio mode when the container is attached directly to an MCP client process:
+
+```bash
+docker run --rm -i nhvr-tools
+```
+
+### Run MCP Over HTTP
+
+```bash
+docker run --rm \
+  -p 8080:8080 \
+  -e NHVR_MCP_TRANSPORT=streamable_http \
+  -e NHVR_MCP_HOST=0.0.0.0 \
+  -e NHVR_MCP_PORT=8080 \
+  nhvr-tools
+```
+
+Then connect to port `8080` from your MCP-capable client or reverse proxy.
+
+### Docker Environment Variables
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `NHVR_MCP_TRANSPORT` | MCP transport mode: `stdio` or `streamable_http` | `stdio` |
+| `NHVR_MCP_HOST` | HTTP bind host | `0.0.0.0` |
+| `NHVR_MCP_PORT` | HTTP port | `8080` |
+| `NHVR_API_KEY` | Enables registration lookups | unset |
+
+### Docker Note About Scraping
+
+The default image does not install Playwright. That keeps the container smaller and allows MCP startup without browser dependencies. Scraper-specific operations return a clear install hint instead of crashing.
+
+If you need live NHVR scraping inside Docker, extend the image with:
+
+```bash
+pip install "nhvr-tools[scraper]"
+playwright install chromium
+```
+
+You may also need the additional Playwright system packages required by your base image.
+
+## Troubleshooting
+
+### `ModuleNotFoundError: fastmcp`
+
+Install the MCP extra:
+
+```bash
+pip install "nhvr-tools[mcp]"
+```
+
+### Scraper command says Playwright is required
+
+Install scraper support and the browser:
+
+```bash
+pip install "nhvr-tools[scraper]"
+playwright install chromium
+```
+
+### Registration lookup says an API key is required
+
+Set the environment variable or pass it directly:
+
+```bash
+export NHVR_API_KEY="your-key"
+```
+
+```python
+from nhvr_mcp import NHVR
+client = NHVR(api_key="your-key")
+```
+
+### Search could not find a topic
+
+Use one of the suggested topics, or scrape a specific NHVR page directly:
+
+```bash
+nhvr scrape "https://www.nhvr.gov.au/road-access/access-permits"
+```
 
 ## Development
 
 ```bash
-# Clone and install with dev dependencies
-git clone https://github.com/MBemera/nhvr-tools.git
-cd nhvr-tools
 pip install -e ".[dev]"
-
-# Run tests
-pytest
-
-# Lint
 ruff check .
-ruff format .
+pytest
 ```
-
----
 
 ## Data Sources
 
-All built-in knowledge base data is sourced from:
+Built-in knowledge is based on official NHVR and HVNL material, including:
 
-- [NHVR website](https://www.nhvr.gov.au/) (nhvr.gov.au)
-- [Heavy Vehicle National Law](https://www.nhvr.gov.au/law-policies/heavy-vehicle-national-law-and-regulations) (HVNL)
-- [NHVR Developer Portal](https://api-portal.nhvr.gov.au/) (vehicle registration API)
+- [NHVR website](https://www.nhvr.gov.au/)
+- [Heavy Vehicle National Law and regulations](https://www.nhvr.gov.au/law-policies/heavy-vehicle-national-law-and-regulations)
+- [NHVR developer portal](https://api-portal.nhvr.gov.au/)
 
-This is an **unofficial** tool. It is not affiliated with or endorsed by the NHVR. Always verify compliance information against official NHVR sources.
-
----
+This project is **unofficial**. It is not affiliated with or endorsed by the NHVR. Always verify operational and legal requirements against current official sources.
 
 ## License
 
-[MIT](LICENSE)
+MIT
