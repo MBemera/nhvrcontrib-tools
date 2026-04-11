@@ -75,3 +75,7 @@ The built-in knowledge base was reviewed against current NHVR guidance for:
   - https://www.nhvr.gov.au/safety-accreditation-compliance/national-heavy-vehicle-accreditation-scheme/nhvas-transition-to-hva-scheme/transition-options
 - Speed limiter / engine remapping guidance:
   - https://www.nhvr.gov.au/engineremapping
+
+## Maintenance
+
+Repeat this manual audit before a release that changes built-in legal summaries, provenance dates, or source mappings.

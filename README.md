@@ -8,62 +8,63 @@
 [![CI](https://github.com/MBemera/nhvr-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/MBemera/nhvr-tools/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-`nhvr-tools` gives you quick access to fatigue rules, mass limits, dimension limits, chain of responsibility duties, accreditation guidance, permits, breach categories, and NHVR registration lookups.
+`nhvr-tools` gives you quick access to fatigue rules, mass limits, dimension limits, Chain of Responsibility duties, accreditation guidance, permits, breach categories, and NHVR registration lookups.
 
 The PyPI package name is `nhvr-tools`. The Python import path is `nhvr_mcp`.
 
-## Choose Your Install Path
+## Quick Start
 
-| Use case | Install command |
-| --- | --- |
-| Python SDK only | `pip install nhvr-tools` |
-| CLI | `pip install "nhvr-tools[cli]"` |
-| MCP server for Claude/Desktop clients | `pip install "nhvr-tools[mcp]"` |
-| Live NHVR page scraping | `pip install "nhvr-tools[scraper]"` |
-| Everything | `pip install "nhvr-tools[all]"` |
+Choose the smallest install that matches your use case:
 
-## Install From PyPI
+| Use case | Install command | First command to try |
+| --- | --- | --- |
+| Python SDK | `pip install nhvr-tools` | `python -c "from nhvr_mcp import NHVR; print(NHVR().fatigue_rules()['summary'])"` |
+| CLI | `pip install "nhvr-tools[cli]"` | `nhvr fatigue rules` |
+| Claude Desktop / MCP | `pip install "nhvr-tools[mcp]"` | `nhvr-setup` |
+| Live NHVR page scraping | `pip install "nhvr-tools[scraper]"` | `playwright install chromium` |
+| Everything | `pip install "nhvr-tools[all]"` | `nhvr --help` |
+
+Playwright is optional. Base imports, SDK usage, CLI help, CLI knowledge commands, and MCP server startup work without it.
+
+## Install
+
+### Install From PyPI
 
 ```bash
-# SDK only
 pip install nhvr-tools
-
-# CLI
 pip install "nhvr-tools[cli]"
-
-# MCP server
 pip install "nhvr-tools[mcp]"
-
-# Full install
 pip install "nhvr-tools[all]"
 ```
 
-### Optional Playwright Install
+### Install From Source
 
-Playwright is only needed for live NHVR page scraping. Base imports, SDK usage, CLI help, knowledge-base commands, and MCP server startup do not require it.
+```bash
+git clone https://github.com/MBemera/nhvr-tools.git
+cd nhvr-tools
+pip install -e ".[dev]"
+```
+
+For a smaller source install:
+
+```bash
+pip install -e .
+pip install -e ".[cli]"
+pip install -e ".[mcp]"
+```
+
+### Optional Playwright Install
 
 ```bash
 pip install "nhvr-tools[scraper]"
 playwright install chromium
 ```
 
-If Playwright is missing, scraper-specific features fail with a readable message and install hint.
+If Playwright is missing, scraper-specific commands return a readable install hint instead of crashing.
 
-## Install From Source
+## Claude Desktop And MCP
 
-```bash
-git clone https://github.com/MBemera/nhvr-tools.git
-cd nhvr-tools
-
-# Pick the extra you need
-pip install -e ".[mcp]"
-pip install -e ".[cli]"
-pip install -e ".[dev]"
-```
-
-## MCP Setup For Claude Desktop
-
-Recommended path:
+### Recommended Setup
 
 ```bash
 pip install "nhvr-tools[mcp]"
@@ -72,13 +73,25 @@ nhvr-setup
 
 `nhvr-setup` checks the MCP dependency, offers optional API key and Playwright guidance, writes the Claude Desktop config, and verifies that the server imports correctly.
 
+Useful setup commands:
+
+```bash
+nhvr-setup --help
+nhvr-setup --print-config
+nhvr-setup --yes --api-key "your-nhvr-api-key"
+```
+
+`nhvr-setup` is safe in non-interactive shells. If there is no stdin, it prints the config snippet instead of crashing or silently overwriting files.
+
 ### Manual Claude Desktop Config
 
-Add this to your Claude Desktop config:
+Claude Desktop config paths:
 
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Linux: `~/.config/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+Use the same Python interpreter that has `nhvr-tools[mcp]` installed:
 
 ```json
 {
@@ -91,7 +104,7 @@ Add this to your Claude Desktop config:
 }
 ```
 
-If you use registration lookups, add `NHVR_API_KEY` to the server `env` block.
+If you use registration lookups, add `NHVR_API_KEY` to the `env` block.
 
 ### Run The MCP Server Directly
 
@@ -116,7 +129,7 @@ python -m nhvr_mcp.server
 | `nhvr_get_breach_categories` | Breach severity categories |
 | `nhvr_get_speed_limits` | Speed limits and speed limiter rules |
 | `nhvr_get_cor_duties` | Chain of Responsibility duties |
-| `nhvr_get_accreditation_info` | NHVAS accreditation information |
+| `nhvr_get_accreditation_info` | NHVAS and HVA guidance |
 | `nhvr_get_permit_types` | Access permit types |
 | `nhvr_get_hml_info` | Higher Mass Limits guidance |
 | `nhvr_search_vehicle_registration` | Vehicle registration lookup |
@@ -125,9 +138,13 @@ python -m nhvr_mcp.server
 
 ## CLI
 
+Install:
+
 ```bash
 pip install "nhvr-tools[cli]"
 ```
+
+Common commands:
 
 ```bash
 nhvr fatigue rules
@@ -136,17 +153,15 @@ nhvr mass limits --include-hml
 nhvr mass hml
 nhvr dimension limits
 nhvr breach categories --type mass
-nhvr speed
 nhvr cor duties --role operator
 nhvr accreditation --module fatigue
 nhvr permits --type oversize
 nhvr rego ABC123
 nhvr search "rest breaks"
-nhvr scrape "https://www.nhvr.gov.au/road-access/access-permits"
 nhvr --format json fatigue rules
 ```
 
-Search now uses alias and fuzzy topic matching. Queries like `bfm`, `afm`, `rest breaks`, `b-double mass`, `executive due diligence`, `speed limiter`, and `oversize permits` map more reliably to relevant NHVR topics. If there is no strong match, the CLI returns a few likely topics instead of a dead end.
+Search uses aliases and lightweight fuzzy matching. Queries like `bfm`, `afm`, `rest breaks`, `b-double mass`, `loader duty`, `executive due diligence`, `speed limiter`, and `oversize permits` resolve more reliably than plain substring matching. If there is no strong match, the CLI suggests likely topics instead of returning a dead end.
 
 ## Python SDK
 
@@ -162,14 +177,7 @@ cor = client.cor_duties("operator")
 permits = client.permit_types("oversize")
 ```
 
-Static knowledge responses include provenance metadata:
-
-- `source_title`
-- `source_url`
-- `last_verified`
-- `unofficial_warning`
-
-### Async SDK Methods
+Async methods:
 
 ```python
 import asyncio
@@ -184,9 +192,18 @@ page = asyncio.run(client.scrape("https://www.nhvr.gov.au/road-access/mass-and-d
 
 `search_registration()` needs an NHVR API key. `search()` and `scrape()` may use Playwright for live NHVR pages. If live scraping is unavailable, topic search falls back to the built-in knowledge base where possible.
 
+Static knowledge responses include:
+
+- `source_title`
+- `source_url`
+- `last_verified`
+- `unofficial_warning`
+
 ## Docker
 
 The default image runs the MCP server with the `mcp` extra installed. It is intended for MCP clients, not for interactive CLI use.
+
+Build the image:
 
 ```bash
 docker build -t nhvr-tools .
@@ -211,7 +228,7 @@ docker run --rm \
   nhvr-tools
 ```
 
-Then connect to port `8080` from your MCP-capable client or reverse proxy.
+Then connect your MCP-capable client to port `8080`.
 
 ### Docker Environment Variables
 
@@ -233,9 +250,13 @@ pip install "nhvr-tools[scraper]"
 playwright install chromium
 ```
 
-You may also need the additional Playwright system packages required by your base image.
+You may also need the extra Playwright system packages required by your base image.
 
 ## Troubleshooting
+
+### `nhvr-setup` printed config instead of writing it
+
+That usually means the command ran without interactive stdin. Run `nhvr-setup` in a normal terminal, or use `nhvr-setup --yes` to accept default prompts explicitly.
 
 ### `ModuleNotFoundError: fastmcp`
 
@@ -264,6 +285,7 @@ export NHVR_API_KEY="your-key"
 
 ```python
 from nhvr_mcp import NHVR
+
 client = NHVR(api_key="your-key")
 ```
 
@@ -277,10 +299,19 @@ nhvr scrape "https://www.nhvr.gov.au/road-access/access-permits"
 
 ## Development
 
+Install the dev environment:
+
 ```bash
 pip install -e ".[dev]"
+```
+
+Run the local checks:
+
+```bash
 ruff check .
 pytest
+python -m build
+python -m twine check dist/*
 ```
 
 ## Data Sources

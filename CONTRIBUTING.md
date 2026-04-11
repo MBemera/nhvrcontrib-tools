@@ -1,8 +1,6 @@
 # Contributing to NHVR Tools
 
-Thanks for your interest in contributing! Here's how to get started.
-
-## Setup
+## Local Setup
 
 ```bash
 git clone https://github.com/MBemera/nhvr-tools.git
@@ -10,42 +8,59 @@ cd nhvr-tools
 pip install -e ".[dev]"
 ```
 
-## Running Tests
+If you only need one profile:
 
 ```bash
-pytest
+pip install -e .
+pip install -e ".[cli]"
+pip install -e ".[mcp]"
 ```
 
-## Code Style
+## Before You Open A PR
 
-This project uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting:
+Run the same checks the repo now expects locally:
 
 ```bash
 ruff check .
-ruff format .
+pytest
+python -m build
+python -m twine check dist/*
+```
+
+If you touch setup, packaging, CLI entry points, or install docs, also smoke test the built artifact:
+
+```bash
+python -m venv .package-smoke
+.package-smoke/bin/pip install dist/*.whl click fastmcp "pydantic>=2.0"
+.package-smoke/bin/nhvr --help
+.package-smoke/bin/nhvr-setup --help
 ```
 
 ## Making Changes
 
-1. Fork the repo and create a branch from `main`
-2. Make your changes
-3. Add tests for new functionality
-4. Run `pytest` and `ruff check .` to verify
-5. Open a pull request
+1. Branch from `main`.
+2. Keep the public API stable unless a change is clearly justified.
+3. Add or update tests with the code change.
+4. Update `README.md`, `CHANGELOG.md`, and any affected docs when user-facing behavior changes.
+5. Keep built-in knowledge summaries tied to official NHVR sources and provenance fields.
 
-## Updating the Knowledge Base
+## Updating The Knowledge Base
 
-The built-in data in `nhvr_mcp/knowledge.py` is sourced from the NHVR website and HVNL legislation. When updating:
+The built-in data in `nhvr_mcp/knowledge.py` is sourced from the NHVR website and HVNL material.
 
-- Cite the source URL or legislation reference
-- Keep the dict structure consistent with existing entries
-- Add tests in `tests/test_knowledge.py` for new entries
+When updating it:
+
+- keep the existing data shape stable where practical
+- include or update provenance fields such as `source_url`, `source_title`, and `last_verified`
+- add or update tests that cover the changed topic
+- repeat the manual verification flow documented in [SOURCE-VERIFICATION.md](SOURCE-VERIFICATION.md) when the legal summary changes
 
 ## Reporting Issues
 
-Open an issue on GitHub with:
+Include:
 
-- What you expected to happen
-- What actually happened
-- Steps to reproduce
+- what you expected to happen
+- what actually happened
+- the command, prompt, or API call you used
+- steps to reproduce
 - Python version and OS
