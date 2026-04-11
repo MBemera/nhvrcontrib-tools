@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 import os
@@ -10,6 +11,8 @@ import shutil
 import subprocess
 import sys
 import textwrap
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 USE_COLOR = sys.stdout.isatty() and (os.name != "nt" or os.environ.get("WT_SESSION"))
@@ -53,23 +56,103 @@ def banner() -> None:
     print()
 
 
-def ask_yes_no(question: str, default: bool = True) -> bool:
-    hint = "[Y/n]" if default else "[y/N]"
-    while True:
-        answer = input(f"  {question} {hint} ").strip().lower()
-        if answer == "":
+@dataclass(slots=True)
+class WizardOptions:
+    assume_yes: bool = False
+    api_key: str | None = None
+    print_config: bool = False
+
+
+class PromptSession:
+    def __init__(self, mode: str) -> None:
+        self.mode = mode
+        self._reported_mode = False
+
+    def _report_mode(self) -> None:
+        if self._reported_mode:
+            return
+        if self.mode == "default_answers":
+            warn("Running without prompts. Default answers will be used.")
+        elif self.mode == "safe_defaults":
+            warn("No interactive input detected. Using safe defaults and printing manual setup steps.")
+        self._reported_mode = True
+
+    def confirm(self, question: str, default: bool = True, safe_default: bool | None = None) -> bool:
+        if self.mode != "interactive":
+            self._report_mode()
+            if self.mode == "default_answers":
+                return default
+            return default if safe_default is None else safe_default
+
+        hint = "[Y/n]" if default else "[y/N]"
+        while True:
+            try:
+                answer = input(f"  {question} {hint} ").strip().lower()
+            except EOFError:
+                self.mode = "safe_defaults"
+                self._report_mode()
+                return default if safe_default is None else safe_default
+            if answer == "":
+                return default
+            if answer in {"y", "yes"}:
+                return True
+            if answer in {"n", "no"}:
+                return False
+            print(f"  {yellow('Please type y or n.')}")
+
+    def text(self, question: str, default: str = "") -> str:
+        hint = f" [{default}]" if default else ""
+        if self.mode != "interactive":
+            self._report_mode()
             return default
-        if answer in {"y", "yes"}:
-            return True
-        if answer in {"n", "no"}:
-            return False
-        print(f"  {yellow('Please type y or n.')}")
+
+        try:
+            answer = input(f"  {question}{hint} ").strip()
+        except EOFError:
+            self.mode = "safe_defaults"
+            self._report_mode()
+            return default
+        return answer or default
 
 
-def ask_text(question: str, default: str = "") -> str:
-    hint = f" [{default}]" if default else ""
-    answer = input(f"  {question}{hint} ").strip()
-    return answer or default
+def parse_args(argv: Sequence[str] | None = None) -> WizardOptions:
+    parser = argparse.ArgumentParser(
+        prog="nhvr-setup",
+        description="Configure NHVR Tools for Claude Desktop / MCP.",
+    )
+    parser.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help="Use default answers and do not prompt for confirmation.",
+    )
+    parser.add_argument(
+        "--api-key",
+        help="Set NHVR_API_KEY in the generated Claude Desktop entry.",
+    )
+    parser.add_argument(
+        "--print-config",
+        action="store_true",
+        help="Print the Claude Desktop config snippet instead of writing the file.",
+    )
+    parsed_args = parser.parse_args(argv)
+    return WizardOptions(
+        assume_yes=parsed_args.yes,
+        api_key=parsed_args.api_key,
+        print_config=parsed_args.print_config,
+    )
+
+
+def input_is_interactive() -> bool:
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def build_prompt_session(options: WizardOptions) -> PromptSession:
+    if options.assume_yes:
+        return PromptSession("default_answers")
+    if input_is_interactive():
+        return PromptSession("interactive")
+    return PromptSession("safe_defaults")
 
 
 def step(number: int, title: str) -> None:
@@ -112,7 +195,7 @@ def check_python() -> bool:
     return False
 
 
-def ensure_mcp_dependencies() -> bool:
+def ensure_mcp_dependencies(prompts: PromptSession) -> bool:
     step(2, "Checking MCP server dependencies")
     if module_is_available("fastmcp"):
         ok("The MCP server extra is already installed.")
@@ -121,7 +204,7 @@ def ensure_mcp_dependencies() -> bool:
     warn("The MCP server extra is not installed yet.")
     if is_source_checkout(PROJECT_ROOT):
         print("  This looks like a source checkout, so the wizard can install it.")
-        if ask_yes_no("Install the MCP extra now?", default=True):
+        if prompts.confirm("Install the MCP extra now?", default=True, safe_default=False):
             result = run([sys.executable, "-m", "pip", "install", "-e", ".[mcp]"], cwd=PROJECT_ROOT)
             if result.returncode == 0:
                 ok("Installed the MCP extra from source.")
@@ -135,7 +218,7 @@ def ensure_mcp_dependencies() -> bool:
     return False
 
 
-def configure_optional_scraper() -> None:
+def configure_optional_scraper(prompts: PromptSession) -> None:
     step(3, "Optional live NHVR scraping")
     print(
         textwrap.indent(
@@ -157,7 +240,7 @@ def configure_optional_scraper() -> None:
         return
 
     ok("Playwright is installed.")
-    if ask_yes_no("Install the Chromium browser now?", default=False):
+    if prompts.confirm("Install the Chromium browser now?", default=False, safe_default=False):
         result = run([sys.executable, "-m", "playwright", "install", "chromium"])
         if result.returncode == 0:
             ok("Chromium is installed.")
@@ -170,7 +253,7 @@ def configure_optional_scraper() -> None:
     warn("Skipped browser install.")
 
 
-def configure_api_key() -> str | None:
+def configure_api_key(prompts: PromptSession, options: WizardOptions) -> str | None:
     step(4, "Optional NHVR API key")
     print(
         textwrap.indent(
@@ -184,7 +267,11 @@ def configure_api_key() -> str | None:
         )
     )
 
-    api_key = ask_text("NHVR API key (or press Enter to skip):")
+    if options.api_key:
+        ok("The API key will be added to the MCP server environment.")
+        return options.api_key
+
+    api_key = prompts.text("NHVR API key (or press Enter to skip):")
     if api_key:
         ok("The API key will be added to the MCP server environment.")
         return api_key
@@ -193,7 +280,11 @@ def configure_api_key() -> str | None:
     return None
 
 
-def configure_claude_desktop(api_key: str | None) -> None:
+def configure_claude_desktop(
+    prompts: PromptSession,
+    api_key: str | None,
+    print_config_only: bool = False,
+) -> None:
     step(5, "Configuring Claude Desktop")
 
     config_path = get_claude_config_path()
@@ -206,14 +297,22 @@ def configure_claude_desktop(api_key: str | None) -> None:
 
     print(f"  Config file: {cyan(str(config_path))}")
     print()
-    if not ask_yes_no("Write or update the Claude Desktop config now?", default=True):
+    if print_config_only:
+        print_manual_config(server_entry, config_path)
+        return
+
+    if not prompts.confirm("Write or update the Claude Desktop config now?", default=True, safe_default=False):
         print_manual_config(server_entry, config_path)
         return
 
     config = read_config_file(config_path)
     config.setdefault("mcpServers", {})
     if "nhvr-tools" in config["mcpServers"]:
-        overwrite_existing = ask_yes_no("An NHVR Tools entry already exists. Replace it?", default=False)
+        overwrite_existing = prompts.confirm(
+            "An NHVR Tools entry already exists. Replace it?",
+            default=False,
+            safe_default=False,
+        )
         if not overwrite_existing:
             ok("Kept the existing NHVR Tools entry.")
             return
@@ -317,23 +416,26 @@ def print_recent_stderr(result: subprocess.CompletedProcess[str]) -> None:
         print(f"    {line}")
 
 
-def main() -> None:
+def main(argv: Sequence[str] | None = None) -> int:
+    options = parse_args(argv)
+    prompts = build_prompt_session(options)
     banner()
     if not check_python():
-        raise SystemExit(1)
-    if not ensure_mcp_dependencies():
-        raise SystemExit(1)
+        return 1
+    if not ensure_mcp_dependencies(prompts):
+        return 1
 
-    configure_optional_scraper()
-    api_key = configure_api_key()
-    configure_claude_desktop(api_key)
+    configure_optional_scraper(prompts)
+    api_key = configure_api_key(prompts, options)
+    configure_claude_desktop(prompts, api_key, print_config_only=options.print_config)
     test_server()
     finish()
+    return 0
 
 
 if __name__ == "__main__":
     try:
-        main()
+        raise SystemExit(main())
     except KeyboardInterrupt:
         print()
         print(f"  {yellow('Setup cancelled. Run `nhvr-setup` again when ready.')}")

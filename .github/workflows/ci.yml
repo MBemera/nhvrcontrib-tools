@@ -29,6 +29,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
 
       - name: Install profile
         run: ${{ matrix.install }}
@@ -53,6 +57,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
 
       - name: Install dependencies
         run: pip install -e ".[dev]"
@@ -62,3 +70,35 @@ jobs:
 
       - name: Test
         run: pytest -v
+
+  package-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install packaging tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build artifacts
+        run: python -m build
+
+      - name: Validate artifacts
+        run: python -m twine check dist/*
+
+      - name: Smoke test installed wheel
+        run: |
+          python -m venv .package-smoke
+          .package-smoke/bin/pip install dist/*.whl click fastmcp "pydantic>=2.0"
+          .package-smoke/bin/python -c "import nhvr_mcp, nhvr_mcp.sdk, nhvr_mcp.tools, nhvr_mcp.scraper; print('artifact-base-ok')"
+          .package-smoke/bin/python -c "from nhvr_mcp.server import mcp; print(type(mcp).__name__)"
+          .package-smoke/bin/nhvr --help
+          .package-smoke/bin/nhvr-setup --help

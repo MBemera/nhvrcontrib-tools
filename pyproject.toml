@@ -79,8 +79,10 @@ Changelog = "https://github.com/MBemera/nhvr-tools/blob/main/CHANGELOG.md"
 packages = ["nhvr_mcp"]
 
 [tool.pytest.ini_options]
-addopts = "-q"
+addopts = "-q --import-mode=importlib"
 asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.ruff]
 target-version = "py310"
