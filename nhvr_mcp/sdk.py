@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import os
 
-from nhvr_mcp.knowledge import (
-    ACCREDITATION_INFO,
-    BREACH_CATEGORIES,
-    COR_DUTIES,
-    DIMENSION_LIMITS,
-    FATIGUE_RULES,
-    HML_INFO,
-    MASS_LIMITS,
-    PERMIT_TYPES,
-    SPEED_LIMITS,
+from nhvr_mcp.service import (
+    get_accreditation_info_data,
+    get_breach_categories_data,
+    get_cor_duties_data,
+    get_dimension_limits_data,
+    get_fatigue_rules_data,
+    get_hml_info_data,
+    get_mass_limits_data,
+    get_permit_types_data,
+    get_speed_limits_data,
+    scrape_page_data,
+    search_regulations_data,
+    search_vehicle_registration_data,
 )
 
 
@@ -30,120 +33,39 @@ class NHVR:
     # -- Sync knowledge-base lookups --
 
     def fatigue_rules(self, scheme: str = "standard") -> dict:
-        return FATIGUE_RULES.get(scheme, {"error": f"Unknown scheme: {scheme}"})
+        return get_fatigue_rules_data(scheme=scheme)
 
     def mass_limits(self, include_hml: bool = False) -> dict:
-        data: dict = {"general": MASS_LIMITS["general"]}
-        if include_hml:
-            data["hml"] = MASS_LIMITS["hml"]
-        return data
+        return get_mass_limits_data(include_hml=include_hml)
 
     def dimension_limits(self) -> dict:
-        return dict(DIMENSION_LIMITS)
+        return get_dimension_limits_data()
 
     def breach_categories(self, breach_type: str | None = None) -> dict:
-        if breach_type:
-            return {breach_type: BREACH_CATEGORIES.get(breach_type, f"Unknown breach type: {breach_type}")}
-        return dict(BREACH_CATEGORIES)
+        return get_breach_categories_data(breach_type=breach_type)
 
     def speed_limits(self) -> dict:
-        return dict(SPEED_LIMITS)
+        return get_speed_limits_data()
 
     def cor_duties(self, role: str | None = None) -> dict:
-        if role:
-            return {role: COR_DUTIES.get(role, f"Unknown role: {role}")}
-        return dict(COR_DUTIES)
+        return get_cor_duties_data(role=role)
 
     def accreditation(self, module: str | None = None) -> dict:
-        if module:
-            return {module: ACCREDITATION_INFO.get(module, f"Unknown module: {module}")}
-        return dict(ACCREDITATION_INFO)
+        return get_accreditation_info_data(module=module)
 
     def permit_types(self, permit_type: str | None = None) -> dict:
-        if permit_type:
-            return {permit_type: PERMIT_TYPES.get(permit_type, f"Unknown permit type: {permit_type}")}
-        return dict(PERMIT_TYPES)
+        return get_permit_types_data(permit_type=permit_type)
 
     def hml_info(self) -> dict:
-        return dict(HML_INFO)
+        return get_hml_info_data()
 
     # -- Async methods (network) --
 
     async def search_registration(self, plate_number: str) -> dict:
-        from nhvr_mcp.api_client import NhvrApiClient
-
-        client = NhvrApiClient()
-        if self.api_key:
-            client.api_key = self.api_key
-        return await client.search_vehicle_registration(plate_number)
+        return await search_vehicle_registration_data(plate_number=plate_number, api_key=self.api_key)
 
     async def search(self, query: str) -> dict:
-        from nhvr_mcp.scraper import scrape_nhvr_page
-
-        normalized = query.lower().strip()
-        topic_map = {
-            "work rest": "https://www.nhvr.gov.au/safety-accreditation-compliance/fatigue-management/work-and-rest-requirements",
-            "fatigue": "https://www.nhvr.gov.au/safety-accreditation-compliance/fatigue-management",
-            "work diary": "https://www.nhvr.gov.au/safety-accreditation-compliance/fatigue-management/work-diary",
-            "mass": "https://www.nhvr.gov.au/road-access/mass-and-dimension/mass-limits",
-            "dimension": "https://www.nhvr.gov.au/road-access/mass-and-dimension/dimension-requirements",
-            "chain of responsibility": "https://www.nhvr.gov.au/safety-accreditation-compliance/chain-of-responsibility",
-            "cor": "https://www.nhvr.gov.au/safety-accreditation-compliance/chain-of-responsibility",
-            "nhvas": "https://www.nhvr.gov.au/safety-accreditation-compliance/national-heavy-vehicle-accreditation-scheme",
-            "permits": "https://www.nhvr.gov.au/road-access/access-permits",
-            "pbs": "https://www.nhvr.gov.au/road-access/performance-based-standards",
-            "hvnl": "https://www.nhvr.gov.au/law-policies/heavy-vehicle-national-law-and-regulations",
-            "breach": "https://www.nhvr.gov.au/safety-accreditation-compliance/on-road-compliance-and-enforcement/breach-categorisation",
-            "speed": "https://www.nhvr.gov.au/safety-accreditation-compliance/on-road-compliance-and-enforcement/speeding",
-        }
-        dedicated_scrapers = {
-            "dimension": "scrape_dimension_requirements",
-            "mass": "scrape_mass_limits",
-            "chain of responsibility": "scrape_cor_duties",
-            "cor": "scrape_cor_duties",
-            "work rest": "scrape_fatigue_management",
-            "fatigue": "scrape_fatigue_management",
-            "work diary": "scrape_fatigue_management",
-            "breach": "scrape_breach_categorisation",
-            "speed": "scrape_speed_limits",
-            "nhvas": "scrape_nhvas_info",
-            "permits": "scrape_permit_types",
-            "pbs": None,
-            "hvnl": None,
-        }
-
-        for key, url in topic_map.items():
-            if key in normalized:
-                scraper_name = dedicated_scrapers.get(key)
-                if scraper_name:
-                    import nhvr_mcp.scraper as scraper_module
-
-                    scraper_fn = getattr(scraper_module, scraper_name)
-                    parsed = await scraper_fn(url, use_playwright=True)
-                    return {"query": query, "matched_topic": key, "url": url, **parsed}
-
-                page = await scrape_nhvr_page(url, use_playwright=True)
-                return {
-                    "query": query,
-                    "matched_topic": key,
-                    "url": page.url,
-                    "title": page.title,
-                    "text": page.text[:2000],
-                }
-
-        return {"query": query, "message": "No topic match. Provide a full NHVR URL to scrape()."}
+        return await search_regulations_data(query=query)
 
     async def scrape(self, url: str) -> dict:
-        from nhvr_mcp.scraper import is_nhvr_url, scrape_nhvr_page
-
-        if not is_nhvr_url(url):
-            return {"error": "URL must be on nhvr.gov.au."}
-
-        page = await scrape_nhvr_page(url, use_playwright=True)
-        return {
-            "url": page.url,
-            "title": page.title,
-            "text": page.text[:2000],
-            "tables": page.tables[:5],
-            "links": page.links[:20],
-        }
+        return await scrape_page_data(url=url)

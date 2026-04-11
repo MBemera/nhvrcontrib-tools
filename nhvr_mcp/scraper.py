@@ -7,7 +7,8 @@ from urllib.parse import urlparse
 
 import httpx
 from bs4 import BeautifulSoup
-from playwright.async_api import async_playwright
+
+from nhvr_mcp.errors import NhvrToolsError
 
 NHVR_DOMAIN = "nhvr.gov.au"
 
@@ -36,36 +37,84 @@ async def fetch_page_http(url: str) -> str:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-AU,en;q=0.9",
     }
-    async with httpx.AsyncClient(timeout=60, headers=headers) as client:
-        response = await client.get(url)
-        response.raise_for_status()
-        return response.text
+    try:
+        async with httpx.AsyncClient(timeout=30, headers=headers) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            return response.text
+    except httpx.TimeoutException as error:
+        raise NhvrToolsError(
+            message="The NHVR website took too long to respond.",
+            suggestion="Try again in a moment.",
+            technical_detail=str(error),
+            code="timeout",
+        ) from error
+    except httpx.HTTPStatusError as error:
+        status_code = error.response.status_code
+        if status_code >= 500:
+            raise NhvrToolsError(
+                message="The NHVR website is unavailable right now.",
+                suggestion="Try again later.",
+                technical_detail=error.response.text[:300],
+                code="site_unavailable",
+            ) from error
+        raise NhvrToolsError(
+            message=f"NHVR website request failed with status {status_code}.",
+            suggestion="Check the URL and try again.",
+            technical_detail=error.response.text[:300],
+            code="http_error",
+        ) from error
+    except httpx.RequestError as error:
+        raise NhvrToolsError(
+            message="Could not reach the NHVR website.",
+            suggestion="Check your network connection and try again.",
+            technical_detail=str(error),
+            code="network_error",
+        ) from error
 
 
 async def fetch_page_playwright(url: str) -> str:
-    async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(
-            headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-            ],
-        )
-        context = await browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            ),
-            viewport={"width": 1280, "height": 720},
-            java_script_enabled=True,
-        )
-        page = await context.new_page()
-        # Change wait_until to "load" and increase timeout to 60 seconds
-        await page.goto(url, wait_until="load", timeout=60000)
-        html = await page.content()
-        await context.close()
-        await browser.close()
-        return html
+    async_playwright = _get_async_playwright()
+    try:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                headless=True,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                ],
+            )
+            context = await browser.new_context(
+                user_agent=(
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                ),
+                viewport={"width": 1280, "height": 720},
+                java_script_enabled=True,
+            )
+            page = await context.new_page()
+            await page.goto(url, wait_until="load", timeout=60000)
+            html = await page.content()
+            await context.close()
+            await browser.close()
+            return html
+    except NhvrToolsError:
+        raise
+    except Exception as error:
+        message = str(error)
+        if "Executable doesn't exist" in message:
+            raise NhvrToolsError(
+                message="Playwright is installed, but the Chromium browser is missing.",
+                suggestion="Run `playwright install chromium`.",
+                technical_detail=message,
+                code="missing_browser",
+            ) from error
+        raise NhvrToolsError(
+            message="Playwright could not load the NHVR page.",
+            suggestion="Try again, or install the Chromium browser with `playwright install chromium`.",
+            technical_detail=message,
+            code="playwright_error",
+        ) from error
 
 
 def parse_page(url: str, html: str) -> PageContent:
@@ -221,3 +270,16 @@ async def scrape_permit_types(url: str, use_playwright: bool = False) -> dict:
         "intro": parsed.intro,
         "sections": parsed.sections,
     }
+
+
+def _get_async_playwright():
+    try:
+        from playwright.async_api import async_playwright
+    except ModuleNotFoundError as error:
+        raise NhvrToolsError(
+            message="Playwright is required for NHVR scraping features.",
+            suggestion='Install `nhvr-tools[scraper]` and then run `playwright install chromium`.',
+            technical_detail=str(error),
+            code="missing_playwright",
+        ) from error
+    return async_playwright

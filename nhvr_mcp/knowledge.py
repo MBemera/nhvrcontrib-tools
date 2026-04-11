@@ -4,6 +4,10 @@ Authoritative data sourced from the NHVR website and HVNL legislation.
 Used as quick-lookup fallback when live scraping is not required.
 """
 
+from __future__ import annotations
+
+from copy import deepcopy
+
 FATIGUE_RULES = {
     "standard": {
         "summary": "Standard hours – default work/rest option for all drivers without BFM/AFM accreditation.",
@@ -247,3 +251,68 @@ HML_INFO = {
     },
     "application": "Apply via the NHVR Portal (NHVR Go).",
 }
+
+UNOFFICIAL_WARNING = "This is an unofficial summary. Verify requirements against current NHVR and HVNL sources."
+
+KNOWLEDGE_PROVENANCE = {
+    "fatigue_rules": {
+        "source_title": "NHVR work and rest requirements",
+        "source_url": "https://www.nhvr.gov.au/safety-accreditation-compliance/fatigue-management/work-and-rest-requirements",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "mass_limits": {
+        "source_title": "NHVR mass limits",
+        "source_url": "https://www.nhvr.gov.au/road-access/mass-and-dimension/mass-limits",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "dimension_limits": {
+        "source_title": "NHVR dimension requirements",
+        "source_url": "https://www.nhvr.gov.au/road-access/mass-and-dimension/dimension-requirements",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "breach_categories": {
+        "source_title": "NHVR breach categorisation",
+        "source_url": "https://www.nhvr.gov.au/safety-accreditation-compliance/on-road-compliance-and-enforcement/breach-categorisation",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "speed_limits": {
+        "source_title": "NHVR speeding and speed compliance",
+        "source_url": "https://www.nhvr.gov.au/safety-accreditation-compliance/on-road-compliance-and-enforcement/speeding",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "cor_duties": {
+        "source_title": "NHVR chain of responsibility guidance",
+        "source_url": "https://www.nhvr.gov.au/safety-accreditation-compliance/chain-of-responsibility",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "accreditation_info": {
+        "source_title": "NHVR National Heavy Vehicle Accreditation Scheme",
+        "source_url": "https://www.nhvr.gov.au/safety-accreditation-compliance/national-heavy-vehicle-accreditation-scheme",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "permit_types": {
+        "source_title": "NHVR access permits",
+        "source_url": "https://www.nhvr.gov.au/road-access/access-permits",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "hml_info": {
+        "source_title": "NHVR higher mass limits guidance",
+        "source_url": "https://www.nhvr.gov.au/road-access/mass-and-dimension/mass-limits",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+}
+
+
+def attach_provenance(data: dict, knowledge_key: str) -> dict:
+    response = deepcopy(data)
+    response["provenance"] = deepcopy(KNOWLEDGE_PROVENANCE[knowledge_key])
+    return response

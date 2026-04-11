@@ -8,6 +8,7 @@ def test_fatigue_rules_default():
     rules = client.fatigue_rules()
     assert "summary" in rules
     assert "solo_driver" in rules
+    assert "provenance" in rules
 
 
 def test_fatigue_rules_bfm():
@@ -55,7 +56,7 @@ def test_breach_categories_filtered():
     client = NHVR()
     breaches = client.breach_categories(breach_type="mass")
     assert "mass" in breaches
-    assert len(breaches) == 1
+    assert "provenance" in breaches
 
 
 def test_speed_limits():
@@ -74,6 +75,7 @@ def test_cor_duties_filtered():
     client = NHVR()
     cor = client.cor_duties(role="operator")
     assert "operator" in cor
+    assert "provenance" in cor
 
 
 def test_accreditation_all():
@@ -86,7 +88,7 @@ def test_accreditation_filtered():
     client = NHVR()
     accred = client.accreditation(module="mass")
     assert "mass" in accred
-    assert len(accred) == 1
+    assert "provenance" in accred
 
 
 def test_permit_types_all():
@@ -99,7 +101,7 @@ def test_permit_types_filtered():
     client = NHVR()
     permits = client.permit_types(permit_type="class_1")
     assert "class_1" in permits
-    assert len(permits) == 1
+    assert "provenance" in permits
 
 
 def test_hml_info():
