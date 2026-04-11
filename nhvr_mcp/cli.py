@@ -3,27 +3,37 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
+from typing import Any
 
 import click
 
-from nhvr_mcp.tools import (
-    get_accreditation_info,
-    get_breach_categories,
-    get_cor_duties,
-    get_dimension_limits,
-    get_fatigue_rules,
-    get_hml_info,
-    get_mass_limits,
-    get_permit_types,
-    get_speed_limits,
-    scrape_page,
-    search_regulations,
-    search_vehicle_registration,
+from nhvr_mcp.errors import is_error_response
+from nhvr_mcp.formatters import format_response
+from nhvr_mcp.service import (
+    get_accreditation_info_data,
+    get_breach_categories_data,
+    get_cor_duties_data,
+    get_dimension_limits_data,
+    get_fatigue_rules_data,
+    get_hml_info_data,
+    get_mass_limits_data,
+    get_permit_types_data,
+    get_speed_limits_data,
+    scrape_page_data,
+    search_regulations_data,
+    search_vehicle_registration_data,
 )
 
 
-def run_async(coro):
+def run_async(coro: Coroutine[Any, Any, dict[str, Any]]) -> dict[str, Any]:
     return asyncio.run(coro)
+
+
+def emit_response(data: dict[str, Any], output_format: str) -> None:
+    click.echo(format_response(data, output_format))
+    if is_error_response(data):
+        raise click.exceptions.Exit(1)
 
 
 @click.group()
@@ -44,8 +54,7 @@ def fatigue() -> None:
 @click.pass_context
 def fatigue_rules(context: click.Context, scheme: str) -> None:
     output_format = context.obj["output_format"]
-    result = get_fatigue_rules(scheme=scheme, output_format=output_format)
-    click.echo(result)
+    emit_response(get_fatigue_rules_data(scheme=scheme), output_format)
 
 
 @cli.group()
@@ -58,16 +67,14 @@ def mass() -> None:
 @click.pass_context
 def mass_limits(context: click.Context, include_hml: bool) -> None:
     output_format = context.obj["output_format"]
-    result = get_mass_limits(include_hml=include_hml, output_format=output_format)
-    click.echo(result)
+    emit_response(get_mass_limits_data(include_hml=include_hml), output_format)
 
 
 @mass.command("hml")
 @click.pass_context
 def mass_hml(context: click.Context) -> None:
     output_format = context.obj["output_format"]
-    result = get_hml_info(output_format=output_format)
-    click.echo(result)
+    emit_response(get_hml_info_data(), output_format)
 
 
 @cli.group()
@@ -79,8 +86,7 @@ def dimension() -> None:
 @click.pass_context
 def dimension_limits(context: click.Context) -> None:
     output_format = context.obj["output_format"]
-    result = get_dimension_limits(output_format=output_format)
-    click.echo(result)
+    emit_response(get_dimension_limits_data(), output_format)
 
 
 @cli.group()
@@ -93,16 +99,14 @@ def breach() -> None:
 @click.pass_context
 def breach_categories(context: click.Context, breach_type: str | None) -> None:
     output_format = context.obj["output_format"]
-    result = get_breach_categories(breach_type=breach_type, output_format=output_format)
-    click.echo(result)
+    emit_response(get_breach_categories_data(breach_type=breach_type), output_format)
 
 
 @cli.command("speed")
 @click.pass_context
 def speed_limits(context: click.Context) -> None:
     output_format = context.obj["output_format"]
-    result = get_speed_limits(output_format=output_format)
-    click.echo(result)
+    emit_response(get_speed_limits_data(), output_format)
 
 
 @cli.group()
@@ -115,8 +119,7 @@ def cor() -> None:
 @click.pass_context
 def cor_duties(context: click.Context, role: str | None) -> None:
     output_format = context.obj["output_format"]
-    result = get_cor_duties(role=role, output_format=output_format)
-    click.echo(result)
+    emit_response(get_cor_duties_data(role=role), output_format)
 
 
 @cli.command("accreditation")
@@ -124,8 +127,7 @@ def cor_duties(context: click.Context, role: str | None) -> None:
 @click.pass_context
 def accreditation(context: click.Context, module: str | None) -> None:
     output_format = context.obj["output_format"]
-    result = get_accreditation_info(module=module, output_format=output_format)
-    click.echo(result)
+    emit_response(get_accreditation_info_data(module=module), output_format)
 
 
 @cli.command("permits")
@@ -133,8 +135,7 @@ def accreditation(context: click.Context, module: str | None) -> None:
 @click.pass_context
 def permits(context: click.Context, permit_type: str | None) -> None:
     output_format = context.obj["output_format"]
-    result = get_permit_types(permit_type=permit_type, output_format=output_format)
-    click.echo(result)
+    emit_response(get_permit_types_data(permit_type=permit_type), output_format)
 
 
 @cli.command("rego")
@@ -142,8 +143,8 @@ def permits(context: click.Context, permit_type: str | None) -> None:
 @click.pass_context
 def rego(context: click.Context, plate_number: str) -> None:
     output_format = context.obj["output_format"]
-    result = run_async(search_vehicle_registration(plate_number=plate_number, output_format=output_format))
-    click.echo(result)
+    result = run_async(search_vehicle_registration_data(plate_number=plate_number))
+    emit_response(result, output_format)
 
 
 @cli.command("search")
@@ -151,8 +152,8 @@ def rego(context: click.Context, plate_number: str) -> None:
 @click.pass_context
 def search(context: click.Context, query: str) -> None:
     output_format = context.obj["output_format"]
-    result = run_async(search_regulations(query=query, output_format=output_format))
-    click.echo(result)
+    result = run_async(search_regulations_data(query=query))
+    emit_response(result, output_format)
 
 
 @cli.command("scrape")
@@ -160,8 +161,8 @@ def search(context: click.Context, query: str) -> None:
 @click.pass_context
 def scrape(context: click.Context, url: str) -> None:
     output_format = context.obj["output_format"]
-    result = run_async(scrape_page(url=url, output_format=output_format))
-    click.echo(result)
+    result = run_async(scrape_page_data(url=url))
+    emit_response(result, output_format)
 
 
 def main() -> None:

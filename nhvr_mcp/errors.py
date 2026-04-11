@@ -40,3 +40,9 @@ def as_error_response(error: Exception, default_message: str) -> dict[str, Any]:
         message=default_message,
         technical_detail=technical_detail,
     ).to_dict()
+
+
+def is_error_response(data: Any) -> bool:
+    """Return True when the payload uses the standard error envelope."""
+
+    return isinstance(data, dict) and isinstance(data.get("error"), dict)

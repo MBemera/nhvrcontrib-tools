@@ -301,7 +301,10 @@ def print_manual_config(server_entry: dict[str, object], config_path: Path) -> N
 
 
 def module_is_available(module_name: str) -> bool:
-    return importlib.util.find_spec(module_name) is not None
+    try:
+        return importlib.util.find_spec(module_name) is not None
+    except (ImportError, ModuleNotFoundError, ValueError):
+        return False
 
 
 def is_source_checkout(project_root: Path) -> bool:

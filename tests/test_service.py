@@ -48,6 +48,40 @@ def test_search_returns_static_fallback_when_live_search_fails(monkeypatch) -> N
     assert result["data"]["provenance"]["source_url"].startswith("https://")
 
 
+def test_search_returns_static_fallback_for_law_topic(monkeypatch) -> None:
+    async def fail_live_search(url: str, scraper_name: str | None) -> dict:
+        raise NhvrToolsError(
+            message="Playwright is required for NHVR scraping features.",
+            code="missing_playwright",
+        )
+
+    monkeypatch.setattr(service, "_scrape_topic_data", fail_live_search)
+
+    result = asyncio.run(service.search_regulations_data("hvnl law"))
+
+    assert result["matched_topic"] == "HVNL and Regulations"
+    assert result["search_mode"] == "static_fallback"
+    assert "Heavy Vehicle National Law" in result["data"]["summary"]
+    assert result["data"]["provenance"]["source_url"].endswith("heavy-vehicle-national-law-and-regulations")
+
+
+def test_search_returns_static_fallback_for_pbs_topic(monkeypatch) -> None:
+    async def fail_live_search(url: str, scraper_name: str | None) -> dict:
+        raise NhvrToolsError(
+            message="Playwright is required for NHVR scraping features.",
+            code="missing_playwright",
+        )
+
+    monkeypatch.setattr(service, "_scrape_topic_data", fail_live_search)
+
+    result = asyncio.run(service.search_regulations_data("pbs"))
+
+    assert result["matched_topic"] == "Performance Based Standards"
+    assert result["search_mode"] == "static_fallback"
+    assert "Performance Based Standards" in result["data"]["summary"]
+    assert result["data"]["provenance"]["source_url"].endswith("performance-based-standards")
+
+
 def test_search_returns_suggestions_for_unknown_queries() -> None:
     result = asyncio.run(service.search_regulations_data("banana wizard"))
 

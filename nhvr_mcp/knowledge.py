@@ -375,6 +375,39 @@ HML_INFO = {
     ),
 }
 
+LAW_AND_REGULATIONS_INFO = {
+    "summary": (
+        "The Heavy Vehicle National Law and associated regulations set the legal "
+        "framework for heavy vehicle operations in participating jurisdictions."
+    ),
+    "what_you_can_find": [
+        "Heavy Vehicle National Law and regulations",
+        "National gazette notices and operator guides",
+        "Official NHVR policy and legislative references",
+    ],
+    "best_starting_point": (
+        "Start with the NHVR Heavy Vehicle National Law and regulations page, "
+        "then follow the current notices and operator guides relevant to the task."
+    ),
+}
+
+PBS_INFO = {
+    "summary": (
+        "Performance Based Standards (PBS) vehicles are Class 2 heavy vehicles "
+        "designed to meet safety and infrastructure performance standards rather "
+        "than relying only on prescriptive dimensions."
+    ),
+    "what_you_can_find": [
+        "PBS vehicle overview and network access",
+        "PBS levels and standards",
+        "Operator guides and access pathways",
+    ],
+    "best_starting_point": (
+        "Start with the NHVR Performance Based Standards page, then check the "
+        "relevant network and notice guidance for the specific vehicle."
+    ),
+}
+
 UNOFFICIAL_WARNING = "This is an unofficial summary. Verify requirements against current NHVR and HVNL sources."
 
 KNOWLEDGE_PROVENANCE = {
@@ -429,6 +462,18 @@ KNOWLEDGE_PROVENANCE = {
     "hml_info": {
         "source_title": "NHVR higher mass limits guidance",
         "source_url": "https://www.nhvr.gov.au/road-access/mass-and-dimension/mass-limits",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "law_and_regulations_info": {
+        "source_title": "NHVR Heavy Vehicle National Law and regulations",
+        "source_url": "https://www.nhvr.gov.au/law-policies/heavy-vehicle-national-law-and-regulations",
+        "last_verified": "2026-04-11",
+        "unofficial_warning": UNOFFICIAL_WARNING,
+    },
+    "pbs_info": {
+        "source_title": "NHVR Performance Based Standards",
+        "source_url": "https://www.nhvr.gov.au/road-access/performance-based-standards",
         "last_verified": "2026-04-11",
         "unofficial_warning": UNOFFICIAL_WARNING,
     },

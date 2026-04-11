@@ -14,7 +14,9 @@ from nhvr_mcp.knowledge import (
     DIMENSION_LIMITS,
     FATIGUE_RULES,
     HML_INFO,
+    LAW_AND_REGULATIONS_INFO,
     MASS_LIMITS,
+    PBS_INFO,
     PERMIT_TYPES,
     SPEED_LIMITS,
     attach_provenance,
@@ -81,6 +83,14 @@ def get_permit_types_data(permit_type: str | None = None) -> dict[str, Any]:
 
 def get_hml_info_data() -> dict[str, Any]:
     return attach_provenance(deepcopy(HML_INFO), "hml_info")
+
+
+def get_law_and_regulations_info_data() -> dict[str, Any]:
+    return attach_provenance(deepcopy(LAW_AND_REGULATIONS_INFO), "law_and_regulations_info")
+
+
+def get_pbs_info_data() -> dict[str, Any]:
+    return attach_provenance(deepcopy(PBS_INFO), "pbs_info")
 
 
 async def search_vehicle_registration_data(plate_number: str, api_key: str | None = None) -> dict[str, Any]:
@@ -228,6 +238,12 @@ def _build_search_fallback(topic_key: str, normalized_query: str) -> dict[str, A
         if "oversize" in normalized_query:
             return get_permit_types_data("oversize")
         return get_permit_types_data()
+
+    if topic_key == "law_and_regulations":
+        return get_law_and_regulations_info_data()
+
+    if topic_key == "pbs":
+        return get_pbs_info_data()
 
     return None
 
