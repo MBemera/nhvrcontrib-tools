@@ -7,6 +7,39 @@ on:
     branches: [main]
 
 jobs:
+  install-profiles:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - profile: base
+            install: pip install -e .
+            verify: python -c "import nhvr_mcp, nhvr_mcp.sdk, nhvr_mcp.tools, nhvr_mcp.scraper; print('base-ok')"
+          - profile: cli
+            install: pip install -e ".[cli]"
+            verify: python -m nhvr_mcp.cli --help
+          - profile: mcp
+            install: pip install -e ".[mcp]"
+            verify: python -c "from nhvr_mcp.server import mcp; print('mcp-ok')"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install profile
+        run: ${{ matrix.install }}
+
+      - name: Verify profile
+        run: ${{ matrix.verify }}
+
+      - name: Verify CLI knowledge command
+        if: matrix.profile == 'cli'
+        run: python -m nhvr_mcp.cli fatigue rules
+
   test:
     runs-on: ubuntu-latest
     strategy:
