@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import click
 
@@ -22,6 +23,8 @@ from nhvr_mcp.service import (
     search_regulations_data,
     search_vehicle_registration_data,
 )
+
+
 def emit_response(data: dict[str, Any], output_format: str) -> None:
     click.echo(format_response(data, output_format))
     if is_error_response(data):
