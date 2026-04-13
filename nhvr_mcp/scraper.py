@@ -24,7 +24,15 @@ class PageContent:
 
 def is_nhvr_url(url: str) -> bool:
     parsed = urlparse(url)
-    return parsed.netloc.endswith(NHVR_DOMAIN)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+
+    hostname = parsed.hostname
+    if hostname is None:
+        return False
+
+    normalized_hostname = hostname.lower().rstrip(".")
+    return normalized_hostname == NHVR_DOMAIN or normalized_hostname.endswith(f".{NHVR_DOMAIN}")
 
 
 async def fetch_page_http(url: str) -> str:
@@ -196,18 +204,31 @@ async def scrape_cor_duties(url: str, use_playwright: bool = False) -> dict:
                 sub_page_keys[key] = sub_url
 
     detailed_sections: dict[str, dict] = {}
+    detailed_sections_errors: dict[str, str] = {}
     for key, sub_url in sub_page_keys.items():
         if sub_url:
             try:
                 sub_html = await fetch_page(sub_url, use_playwright=use_playwright)
                 detailed_sections[key] = parse_cor_sub_page(sub_html)
-            except Exception:
-                pass
+            except Exception as error:
+                detailed_sections_errors[key] = _describe_scrape_error(error)
 
     if detailed_sections:
         result["detailed_sections"] = detailed_sections
+    if detailed_sections_errors:
+        result["detailed_sections_errors"] = detailed_sections_errors
 
     return result
+
+
+def _describe_scrape_error(error: Exception) -> str:
+    if isinstance(error, NhvrToolsError):
+        return error.message
+
+    message = str(error).strip()
+    if message:
+        return message
+    return error.__class__.__name__
 
 
 async def scrape_fatigue_management(url: str, use_playwright: bool = False) -> dict:

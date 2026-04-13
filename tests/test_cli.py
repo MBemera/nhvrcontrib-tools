@@ -35,3 +35,15 @@ def test_cli_invalid_permit_type_returns_nonzero() -> None:
 
     assert result.exit_code == 1
     assert "Unknown permit type" in result.output
+
+
+def test_cli_leaf_help_includes_command_description() -> None:
+    runner = CliRunner()
+
+    fatigue_help = runner.invoke(cli, ["fatigue", "rules", "--help"])
+    search_help = runner.invoke(cli, ["search", "--help"])
+
+    assert fatigue_help.exit_code == 0
+    assert "Show fatigue rules for a work and rest scheme." in fatigue_help.output
+    assert search_help.exit_code == 0
+    assert "Search NHVR topics with live scraping and static fallback." in search_help.output

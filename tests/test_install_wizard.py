@@ -1,8 +1,19 @@
+import json
 from pathlib import Path
 
 import pytest
 
 from nhvr_mcp import install_wizard
+
+
+class StubPromptSession:
+    def __init__(self, answers: list[bool]) -> None:
+        self.answers = answers
+
+    def confirm(self, question: str, default: bool = True, safe_default: bool | None = None) -> bool:
+        if not self.answers:
+            raise AssertionError(f"Unexpected prompt: {question}")
+        return self.answers.pop(0)
 
 
 def test_module_is_available_returns_false_for_missing_dotted_module() -> None:
@@ -60,5 +71,76 @@ def test_main_print_config_uses_default_answers(
     assert exit_code == 0
     output = capsys.readouterr().out
     assert "Add this entry under `mcpServers`" in output
-    assert '"NHVR_API_KEY": "test-key"' in output
+    assert '"NHVR_API_KEY": "****-key"' in output
+    assert '"NHVR_API_KEY": "test-key"' not in output
     assert not config_path.exists()
+
+
+@pytest.mark.parametrize("invalid_json_value", [[], "value", 123])
+def test_read_config_file_returns_empty_dict_for_non_object_json(
+    tmp_path: Path,
+    invalid_json_value: object,
+) -> None:
+    config_path = tmp_path / "claude_desktop_config.json"
+    config_path.write_text(json.dumps(invalid_json_value), encoding="utf-8")
+
+    result = install_wizard.read_config_file(config_path)
+
+    assert result == {}
+    backup_path = config_path.with_suffix(".json.backup")
+    assert backup_path.exists()
+    assert backup_path.read_text(encoding="utf-8") == json.dumps(invalid_json_value)
+
+
+def test_print_manual_config_masks_api_key(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    config_path = tmp_path / "claude_desktop_config.json"
+    server_entry = {
+        "command": "python3",
+        "args": ["-m", "nhvr_mcp.server"],
+        "env": {"NHVR_API_KEY": "super-secret-key"},
+    }
+
+    install_wizard.print_manual_config(server_entry, config_path)
+
+    output = capsys.readouterr().out
+    assert "************-key" in output
+    assert "super-secret-key" not in output
+
+
+def test_configure_claude_desktop_uses_atomic_write_and_keeps_full_api_key(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    config_path = tmp_path / "claude_desktop_config.json"
+    existing_config = {
+        "mcpServers": {
+            "nhvr-tools": {"command": "python3", "args": ["-m", "old.server"]},
+            "existing-server": {"command": "python3", "args": ["-m", "existing.server"]},
+        }
+    }
+    config_path.write_text(json.dumps(existing_config), encoding="utf-8")
+
+    replace_calls: list[tuple[Path, Path]] = []
+    real_replace = install_wizard.os.replace
+
+    def tracking_replace(source: str | Path, destination: str | Path) -> None:
+        replace_calls.append((Path(source), Path(destination)))
+        real_replace(source, destination)
+
+    monkeypatch.setattr(install_wizard, "get_claude_config_path", lambda: config_path)
+    monkeypatch.setattr(install_wizard.os, "replace", tracking_replace)
+
+    prompts = StubPromptSession([True, True])
+    install_wizard.configure_claude_desktop(prompts, "super-secret-key")
+
+    temp_path = config_path.with_name(f"{config_path.name}.tmp")
+    backup_path = config_path.with_suffix(".json.backup")
+
+    assert replace_calls == [(temp_path, config_path)]
+    assert not temp_path.exists()
+    assert backup_path.exists()
+    assert json.loads(backup_path.read_text(encoding="utf-8")) == existing_config
+
+    written_config = json.loads(config_path.read_text(encoding="utf-8"))
+    assert written_config["mcpServers"]["nhvr-tools"]["env"]["NHVR_API_KEY"] == "super-secret-key"
+    assert written_config["mcpServers"]["existing-server"]["args"] == ["-m", "existing.server"]
