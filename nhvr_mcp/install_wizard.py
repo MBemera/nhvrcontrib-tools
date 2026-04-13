@@ -306,8 +306,16 @@ def configure_claude_desktop(
         return
 
     config = read_config_file(config_path)
-    config.setdefault("mcpServers", {})
-    if "nhvr-tools" in config["mcpServers"]:
+    mcp_servers = config.get("mcpServers")
+    if mcp_servers is None:
+        mcp_servers = {}
+        config["mcpServers"] = mcp_servers
+    elif not isinstance(mcp_servers, dict):
+        warn("Existing `mcpServers` entry was not a JSON object. It will be replaced.")
+        mcp_servers = {}
+        config["mcpServers"] = mcp_servers
+
+    if "nhvr-tools" in mcp_servers:
         overwrite_existing = prompts.confirm(
             "An NHVR Tools entry already exists. Replace it?",
             default=False,
@@ -317,10 +325,10 @@ def configure_claude_desktop(
             ok("Kept the existing NHVR Tools entry.")
             return
 
-    config["mcpServers"]["nhvr-tools"] = server_entry
+    mcp_servers["nhvr-tools"] = server_entry
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    with config_path.open("w", encoding="utf-8") as handle:
-        json.dump(config, handle, indent=2)
+    backup_config_file(config_path, "Previous Claude Desktop config was backed up.", notify=False)
+    write_json_file_atomic(config_path, config)
     ok("Claude Desktop config updated.")
     print(f"  {yellow('Restart Claude Desktop after setup.')}")
 
@@ -378,25 +386,83 @@ def read_config_file(config_path: Path) -> dict:
 
     try:
         with config_path.open(encoding="utf-8") as handle:
-            return json.load(handle)
+            loaded_config = json.load(handle)
     except (json.JSONDecodeError, OSError):
-        backup_path = config_path.with_suffix(config_path.suffix + ".backup")
-        try:
-            shutil.copy2(config_path, backup_path)
-            warn(f"Existing config could not be read. A backup was saved to {backup_path}.")
-        except OSError:
-            warn("Existing config could not be read. A backup could not be created.")
+        backup_config_file(config_path, "Existing config could not be read.")
         return {}
+
+    if isinstance(loaded_config, dict):
+        return loaded_config
+
+    backup_config_file(config_path, "Existing config must be a JSON object.")
+    return {}
 
 
 def print_manual_config(server_entry: dict[str, object], config_path: Path) -> None:
     print()
     print("  Add this entry under `mcpServers` in your Claude Desktop config:")
-    snippet = json.dumps({"nhvr-tools": server_entry}, indent=2)
+    snippet = json.dumps({"nhvr-tools": build_display_server_entry(server_entry)}, indent=2)
     for line in snippet.splitlines():
         print(f"    {line}")
     print()
     print(f"  Config path: {cyan(str(config_path))}")
+
+
+def backup_config_file(config_path: Path, reason: str, notify: bool = True) -> Path | None:
+    if not config_path.exists():
+        return None
+
+    backup_path = config_path.with_suffix(config_path.suffix + ".backup")
+    try:
+        shutil.copy2(config_path, backup_path)
+    except OSError:
+        if notify:
+            warn(f"{reason} A backup could not be created.")
+        return None
+
+    if notify:
+        warn(f"{reason} A backup was saved to {backup_path}.")
+    return backup_path
+
+
+def write_json_file_atomic(config_path: Path, config: dict[str, object]) -> None:
+    temp_path = config_path.with_name(f"{config_path.name}.tmp")
+    try:
+        with temp_path.open("w", encoding="utf-8") as handle:
+            json.dump(config, handle, indent=2)
+            handle.write("\n")
+        os.replace(temp_path, config_path)
+    except Exception:
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
+
+
+def build_display_server_entry(server_entry: dict[str, object]) -> dict[str, object]:
+    env = server_entry.get("env")
+    if not isinstance(env, dict):
+        return dict(server_entry)
+
+    display_env = dict(env)
+    api_key = display_env.get("NHVR_API_KEY")
+    if isinstance(api_key, str):
+        # Mask the API key in terminal output only. The config file must keep the
+        # original value so the MCP server can authenticate correctly.
+        display_env["NHVR_API_KEY"] = mask_secret(api_key)
+
+    display_server_entry = dict(server_entry)
+    display_server_entry["env"] = display_env
+    return display_server_entry
+
+
+def mask_secret(value: str) -> str:
+    if not value:
+        return ""
+    if len(value) <= 4:
+        return "*" * len(value)
+    return "*" * (len(value) - 4) + value[-4:]
 
 
 def module_is_available(module_name: str) -> bool:

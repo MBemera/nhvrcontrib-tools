@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Any
 
 from nhvr_mcp.api_client import NhvrApiClient
@@ -27,70 +26,70 @@ from nhvr_mcp.search_index import find_topic_match, normalize_search_query, sugg
 def get_fatigue_rules_data(scheme: str = "standard") -> dict[str, Any]:
     if scheme not in FATIGUE_RULES:
         return _invalid_choice("fatigue scheme", scheme, FATIGUE_RULES.keys())
-    return attach_provenance(deepcopy(FATIGUE_RULES[scheme]), "fatigue_rules")
+    return attach_provenance(FATIGUE_RULES[scheme], "fatigue_rules")
 
 
 def get_mass_limits_data(include_hml: bool = False) -> dict[str, Any]:
-    data: dict[str, Any] = {"general": deepcopy(MASS_LIMITS["general"])}
+    data: dict[str, Any] = {"general": MASS_LIMITS["general"]}
     if include_hml:
-        data["hml"] = deepcopy(MASS_LIMITS["hml"])
+        data["hml"] = MASS_LIMITS["hml"]
     return attach_provenance(data, "mass_limits")
 
 
 def get_dimension_limits_data() -> dict[str, Any]:
-    return attach_provenance(deepcopy(DIMENSION_LIMITS), "dimension_limits")
+    return attach_provenance(DIMENSION_LIMITS, "dimension_limits")
 
 
 def get_breach_categories_data(breach_type: str | None = None) -> dict[str, Any]:
     if breach_type is None:
-        return attach_provenance(deepcopy(BREACH_CATEGORIES), "breach_categories")
+        return attach_provenance(BREACH_CATEGORIES, "breach_categories")
     if breach_type not in BREACH_CATEGORIES:
         return _invalid_choice("breach type", breach_type, BREACH_CATEGORIES.keys())
-    data = {breach_type: deepcopy(BREACH_CATEGORIES[breach_type])}
+    data = {breach_type: BREACH_CATEGORIES[breach_type]}
     return attach_provenance(data, "breach_categories")
 
 
 def get_speed_limits_data() -> dict[str, Any]:
-    return attach_provenance(deepcopy(SPEED_LIMITS), "speed_limits")
+    return attach_provenance(SPEED_LIMITS, "speed_limits")
 
 
 def get_cor_duties_data(role: str | None = None) -> dict[str, Any]:
     if role is None:
-        return attach_provenance(deepcopy(COR_DUTIES), "cor_duties")
+        return attach_provenance(COR_DUTIES, "cor_duties")
     if role not in COR_DUTIES:
         return _invalid_choice("CoR role", role, COR_DUTIES.keys())
-    data = {role: deepcopy(COR_DUTIES[role])}
+    data = {role: COR_DUTIES[role]}
     return attach_provenance(data, "cor_duties")
 
 
 def get_accreditation_info_data(module: str | None = None) -> dict[str, Any]:
     if module is None:
-        return attach_provenance(deepcopy(ACCREDITATION_INFO), "accreditation_info")
+        return attach_provenance(ACCREDITATION_INFO, "accreditation_info")
     if module not in ACCREDITATION_INFO:
         return _invalid_choice("accreditation module", module, ACCREDITATION_INFO.keys())
-    data = {module: deepcopy(ACCREDITATION_INFO[module])}
+    data = {module: ACCREDITATION_INFO[module]}
     return attach_provenance(data, "accreditation_info")
 
 
 def get_permit_types_data(permit_type: str | None = None) -> dict[str, Any]:
     if permit_type is None:
-        return attach_provenance(deepcopy(PERMIT_TYPES), "permit_types")
+        return attach_provenance(PERMIT_TYPES, "permit_types")
     if permit_type not in PERMIT_TYPES:
         return _invalid_choice("permit type", permit_type, PERMIT_TYPES.keys())
-    data = {permit_type: deepcopy(PERMIT_TYPES[permit_type])}
+    data = {permit_type: PERMIT_TYPES[permit_type]}
     return attach_provenance(data, "permit_types")
 
 
 def get_hml_info_data() -> dict[str, Any]:
-    return attach_provenance(deepcopy(HML_INFO), "hml_info")
+    return attach_provenance(HML_INFO, "hml_info")
 
 
 def get_law_and_regulations_info_data() -> dict[str, Any]:
-    return attach_provenance(deepcopy(LAW_AND_REGULATIONS_INFO), "law_and_regulations_info")
+    return attach_provenance(LAW_AND_REGULATIONS_INFO, "law_and_regulations_info")
 
 
 def get_pbs_info_data() -> dict[str, Any]:
-    return attach_provenance(deepcopy(PBS_INFO), "pbs_info")
+    return attach_provenance(PBS_INFO, "pbs_info")
 
 
 async def search_vehicle_registration_data(plate_number: str, api_key: str | None = None) -> dict[str, Any]:

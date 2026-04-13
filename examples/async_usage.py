@@ -13,7 +13,7 @@ async def main():
     print("=== Search: fatigue ===")
     results = await client.search("fatigue")
     print(f"Matched topic: {results.get('matched_topic')}")
-    print(f"URL: {results.get('url')}")
+    print(f"URL: {results.get('source_url')}")
     if "title" in results:
         print(f"Title: {results['title']}")
 

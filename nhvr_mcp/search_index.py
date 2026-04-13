@@ -222,7 +222,7 @@ def find_topic_match(query: str) -> TopicMatch | None:
             score = _score_alias_match(normalized_query, alias)
             candidate_match = TopicMatch(topic=topic, alias=alias, score=score)
             if best_match is None or _match_priority(candidate_match) > _match_priority(best_match):
-                best_match = TopicMatch(topic=topic, alias=alias, score=score)
+                best_match = candidate_match
 
     if best_match and best_match.score >= 0.55:
         return best_match

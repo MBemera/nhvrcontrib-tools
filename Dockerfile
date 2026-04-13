@@ -9,7 +9,11 @@ ENV NHVR_MCP_PORT=8080
 COPY pyproject.toml README.md /app/
 COPY nhvr_mcp /app/nhvr_mcp
 
-RUN python -m pip install --no-cache-dir -e ".[mcp]"
+RUN useradd --create-home --system nhvr \
+    && python -m pip install --no-cache-dir -e ".[mcp]" \
+    && chown -R nhvr:nhvr /app
+
+USER nhvr
 
 EXPOSE 8080
 
