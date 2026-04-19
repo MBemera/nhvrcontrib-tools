@@ -21,7 +21,7 @@ from nhvrcontrib.tools import (
     search_vehicle_registration,
 )
 
-mcp = FastMCP("NHVR Tools")
+mcp = FastMCP("NHVR Contrib Tools")
 
 
 @mcp.tool

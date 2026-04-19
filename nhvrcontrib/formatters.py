@@ -18,6 +18,13 @@ SPECIAL_LABELS = {
 }
 
 
+SOURCE_TYPE_LABELS = {
+    "static_knowledge": "static knowledge",
+    "live_scrape": "live scrape",
+    "static_fallback": "static fallback",
+}
+
+
 def format_response(data: Any, output_format: str) -> str:
     if output_format == "json":
         return json.dumps({"data": data}, indent=2, sort_keys=True)
@@ -27,20 +34,54 @@ def format_response(data: Any, output_format: str) -> str:
 
 def render_markdown(data: Any, depth: int = 2) -> str:
     provenance = None
+    live_footer_lines: list[str] = []
     content = data
 
     if isinstance(data, dict):
         content = dict(data)
         provenance = content.pop("provenance", None)
+        live_footer_lines = _extract_live_footer_lines(content)
+
+        nested_data = content.get("data")
+        if isinstance(nested_data, dict) and "provenance" in nested_data:
+            nested_copy = dict(nested_data)
+            if provenance is None:
+                provenance = nested_copy.pop("provenance", None)
+            else:
+                nested_copy.pop("provenance", None)
+            content["data"] = nested_copy
 
     lines = _render_block(content, depth)
     footer_lines = _render_provenance_footer(provenance)
-    if footer_lines:
+    combined_footer = live_footer_lines + footer_lines
+    if combined_footer:
         if lines:
             lines.append("")
-        lines.extend(footer_lines)
+        lines.extend(combined_footer)
 
     return "\n".join(lines)
+
+
+def _extract_live_footer_lines(content: dict[str, Any]) -> list[str]:
+    source_type = content.get("source_type")
+    if source_type not in {"live_scrape", "static_fallback"}:
+        return []
+
+    scraped_at = content.pop("scraped_at", None)
+    fallback_reason = content.pop("fallback_reason", None)
+    content.pop("source_type", None)
+
+    lines: list[str] = []
+    label = SOURCE_TYPE_LABELS.get(str(source_type), str(source_type))
+    lines.append(f"_Source type: {label}_")
+
+    if isinstance(scraped_at, str) and scraped_at:
+        lines.append(f"_Scraped: {scraped_at}_")
+
+    if source_type == "static_fallback" and isinstance(fallback_reason, str) and fallback_reason:
+        lines.append(f"_Fallback reason: {fallback_reason}_")
+
+    return lines
 
 
 def _render_block(data: Any, depth: int, label: str | None = None) -> list[str]:
@@ -126,10 +167,19 @@ def _render_provenance_footer(provenance: Any) -> list[str]:
     source_title = provenance.get("source_title")
     source_url = provenance.get("deep_link_url") or provenance.get("source_url")
     last_verified = provenance.get("last_verified")
+    source_type = provenance.get("source_type")
+    section_reference = provenance.get("section_reference")
 
     footer_lines: list[str] = []
     if isinstance(source_title, str) and isinstance(source_url, str) and isinstance(last_verified, str):
         footer_lines.append(f"_Source: [{source_title}]({source_url}) (verified {last_verified})_")
+
+    if isinstance(source_type, str) and source_type:
+        label = SOURCE_TYPE_LABELS.get(source_type, source_type)
+        footer_lines.append(f"_Source type: {label}_")
+
+    if isinstance(section_reference, str) and section_reference:
+        footer_lines.append(f"_Section: {section_reference}_")
 
     unofficial_warning = provenance.get("unofficial_warning")
     if isinstance(unofficial_warning, str) and unofficial_warning:

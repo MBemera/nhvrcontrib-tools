@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed MCP server display title to `NHVR Contrib Tools` so it clearly reads as the independent community contrib in MCP clients
+- Added explicit `scraped_at` UTC timestamps and `source_type` fields to live `search_regulations` and `scrape_page` outputs
+- Improved provenance rendering for static and live responses so the markdown footer surfaces source type, section reference, and verification date
+- Expanded section-level HVNL deep linking where an anchor can be cited with confidence (for example, CoR primary duty at `sec.26C`)
+- Ensured static fallback search responses clearly identify themselves, preserve the underlying provenance, and render the verification date in markdown output
+- Clarified README provenance and currency guidance so users understand when a response is cached, live, or a fallback
+
 ## [0.3.0] - 2026-04-13
 
 ### Changed
