@@ -39,3 +39,43 @@ def test_markdown_uses_deep_link_when_section_reference_is_available() -> None:
 
     assert "https://www.legislation.qld.gov.au/view/whole/html/inforce/current/act-2012-hvnlq#sec.26C" in rendered
     assert "_Source: [NHVR chain of responsibility guidance]" in rendered
+
+
+def test_all_static_provenance_entries_declare_static_knowledge_source_type() -> None:
+    responses = [
+        get_fatigue_rules_data("standard"),
+        get_mass_limits_data(include_hml=True),
+        get_dimension_limits_data(),
+        get_breach_categories_data(),
+        get_speed_limits_data(),
+        get_cor_duties_data(),
+        get_accreditation_info_data(),
+        get_permit_types_data(),
+        get_hml_info_data(),
+        get_law_and_regulations_info_data(),
+        get_pbs_info_data(),
+    ]
+
+    for response in responses:
+        assert response["provenance"]["source_type"] == "static_knowledge"
+
+
+def test_static_markdown_footer_renders_verified_date_and_source_type() -> None:
+    response = get_fatigue_rules_data("standard")
+    rendered = format_response(response, "markdown")
+
+    assert "(verified 2026-04-11)" in rendered
+    assert "_Source type: static knowledge_" in rendered
+    assert "This is an unofficial summary." in rendered
+
+
+def test_static_markdown_footer_renders_section_reference_when_present() -> None:
+    rendered = format_response(get_cor_duties_data("operator"), "markdown")
+
+    assert "_Section: sec.26C_" in rendered
+
+
+def test_static_markdown_footer_omits_section_when_absent() -> None:
+    rendered = format_response(get_fatigue_rules_data("standard"), "markdown")
+
+    assert "_Section:" not in rendered

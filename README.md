@@ -88,6 +88,17 @@ nhvr-setup --yes --api-key "your-nhvr-api-key"
 
 `nhvr-setup` is safe in non-interactive shells. If there is no stdin, it prints the config snippet instead of crashing or silently overwriting files.
 
+### Provenance And Currency
+
+Every response is annotated so you can see where the content came from:
+
+- Built-in knowledge tools return cached summaries that include `source_title`, `source_url`, `last_verified`, and `source_type: static_knowledge`. Markdown responses render a `Source:` footer with the verification date.
+- Where a reliable HVNL anchor exists (for example, Chain of Responsibility primary duty at `sec.26C`), responses include a `section_reference` and a `deep_link_url` into the Queensland legislation view of the HVNL. Markdown output prefers the deep link.
+- Live `nhvr_search_regulations` and `nhvr_scrape_page` responses include `source_type: live_scrape` and a `scraped_at` UTC timestamp so callers can tell when the page was fetched.
+- When live scraping fails, the search tool returns a static fallback clearly flagged with `source_type: static_fallback` and a `fallback_reason`, and still surfaces the underlying provenance.
+
+Treat cached responses as a quick orientation layer. Always verify operational, safety, or legal decisions against the current official NHVR and HVNL sources linked in the footer.
+
 ### Responsible Use
 
 The built-in knowledge tools return cached summaries with provenance footers:
@@ -190,7 +201,7 @@ nhvr --format json fatigue rules
 
 Search uses aliases and lightweight fuzzy matching. Queries like `bfm`, `afm`, `rest breaks`, `b-double mass`, `loader duty`, `executive due diligence`, `speed limiter`, and `oversize permits` resolve more reliably than plain substring matching. If there is no strong match, the CLI suggests likely topics instead of returning a dead end.
 
-Static markdown responses end with a source footer and verification date. JSON responses include the same provenance fields structurally.
+Static markdown responses end with a source footer, source type, section reference where available, and verification date. Live search and scrape responses add a scrape timestamp and a source-type line. JSON responses include the same provenance fields structurally.
 
 ## Python SDK
 

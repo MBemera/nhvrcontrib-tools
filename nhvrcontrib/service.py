@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 from nhvrcontrib.api_client import NhvrApiClient
@@ -131,13 +132,19 @@ async def search_regulations_data(query: str) -> dict[str, Any]:
     try:
         live_data = await _scrape_topic_data(match.topic.url, match.topic.scraper_name)
         result["search_mode"] = "live_scrape"
+        result["source_type"] = "live_scrape"
+        result["scraped_at"] = _utc_now_iso()
         result.update(live_data)
         return result
     except Exception as error:
         if fallback_data is not None:
             result["search_mode"] = "static_fallback"
+            result["source_type"] = "static_fallback"
             result["fallback_reason"] = _friendly_error_message(error)
             result["data"] = fallback_data
+            fallback_provenance = fallback_data.get("provenance") if isinstance(fallback_data, dict) else None
+            if isinstance(fallback_provenance, dict):
+                result["provenance"] = fallback_provenance
             return result
 
         result.update(as_error_response(error, "Live NHVR search failed."))
@@ -166,9 +173,16 @@ async def scrape_page_data(url: str) -> dict[str, Any]:
             "text": page.text[:2000],
             "tables": page.tables[:5],
             "links": page.links[:20],
+            "source_type": "live_scrape",
+            "scraped_at": _utc_now_iso(),
         }
     except Exception as error:
         return as_error_response(error, "NHVR page scrape failed.")
+
+
+def _utc_now_iso() -> str:
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    return now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 async def _scrape_topic_data(url: str, scraper_name: str | None) -> dict[str, Any]:
