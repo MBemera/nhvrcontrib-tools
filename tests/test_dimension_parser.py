@@ -1,4 +1,4 @@
-from nhvr_mcp.section_parsers import parse_dimension_requirements
+from nhvrcontrib.section_parsers import parse_dimension_requirements
 
 
 def test_parse_dimension_requirements_basic():

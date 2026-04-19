@@ -6,7 +6,7 @@ import os
 
 from fastmcp import FastMCP
 
-from nhvr_mcp.tools import (
+from nhvrcontrib.tools import (
     get_accreditation_info,
     get_breach_categories,
     get_cor_duties,

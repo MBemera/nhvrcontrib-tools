@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from nhvr_mcp.api_client import NhvrApiClient
-from nhvr_mcp.errors import NhvrToolsError, as_error_response
-from nhvr_mcp.knowledge import (
+from nhvrcontrib.api_client import NhvrApiClient
+from nhvrcontrib.errors import NhvrToolsError, as_error_response
+from nhvrcontrib.knowledge import (
     ACCREDITATION_INFO,
     BREACH_CATEGORIES,
     COR_DUTIES,
@@ -20,7 +20,7 @@ from nhvr_mcp.knowledge import (
     SPEED_LIMITS,
     attach_provenance,
 )
-from nhvr_mcp.search_index import find_topic_match, normalize_search_query, suggest_topics
+from nhvrcontrib.search_index import find_topic_match, normalize_search_query, suggest_topics
 
 
 def get_fatigue_rules_data(scheme: str = "standard") -> dict[str, Any]:
@@ -43,9 +43,12 @@ def get_dimension_limits_data() -> dict[str, Any]:
 def get_breach_categories_data(breach_type: str | None = None) -> dict[str, Any]:
     if breach_type is None:
         return attach_provenance(BREACH_CATEGORIES, "breach_categories")
-    if breach_type not in BREACH_CATEGORIES:
+    if breach_type not in BREACH_CATEGORIES or _is_metadata_key(breach_type):
         return _invalid_choice("breach type", breach_type, BREACH_CATEGORIES.keys())
-    data = {breach_type: BREACH_CATEGORIES[breach_type]}
+    data = _with_section_reference(
+        {breach_type: BREACH_CATEGORIES[breach_type]},
+        BREACH_CATEGORIES.get("section_reference"),
+    )
     return attach_provenance(data, "breach_categories")
 
 
@@ -56,27 +59,27 @@ def get_speed_limits_data() -> dict[str, Any]:
 def get_cor_duties_data(role: str | None = None) -> dict[str, Any]:
     if role is None:
         return attach_provenance(COR_DUTIES, "cor_duties")
-    if role not in COR_DUTIES:
+    if role not in COR_DUTIES or _is_metadata_key(role):
         return _invalid_choice("CoR role", role, COR_DUTIES.keys())
-    data = {role: COR_DUTIES[role]}
+    data = _with_section_reference({role: COR_DUTIES[role]}, COR_DUTIES.get("section_reference"))
     return attach_provenance(data, "cor_duties")
 
 
 def get_accreditation_info_data(module: str | None = None) -> dict[str, Any]:
     if module is None:
         return attach_provenance(ACCREDITATION_INFO, "accreditation_info")
-    if module not in ACCREDITATION_INFO:
+    if module not in ACCREDITATION_INFO or _is_metadata_key(module):
         return _invalid_choice("accreditation module", module, ACCREDITATION_INFO.keys())
-    data = {module: ACCREDITATION_INFO[module]}
+    data = _with_section_reference({module: ACCREDITATION_INFO[module]}, ACCREDITATION_INFO.get("section_reference"))
     return attach_provenance(data, "accreditation_info")
 
 
 def get_permit_types_data(permit_type: str | None = None) -> dict[str, Any]:
     if permit_type is None:
         return attach_provenance(PERMIT_TYPES, "permit_types")
-    if permit_type not in PERMIT_TYPES:
+    if permit_type not in PERMIT_TYPES or _is_metadata_key(permit_type):
         return _invalid_choice("permit type", permit_type, PERMIT_TYPES.keys())
-    data = {permit_type: PERMIT_TYPES[permit_type]}
+    data = _with_section_reference({permit_type: PERMIT_TYPES[permit_type]}, PERMIT_TYPES.get("section_reference"))
     return attach_provenance(data, "permit_types")
 
 
@@ -144,7 +147,7 @@ async def search_regulations_data(query: str) -> dict[str, Any]:
 
 async def scrape_page_data(url: str) -> dict[str, Any]:
     try:
-        from nhvr_mcp.scraper import is_nhvr_url, scrape_nhvr_page
+        from nhvrcontrib.scraper import is_nhvr_url, scrape_nhvr_page
     except Exception as error:
         return as_error_response(error, "Scraper setup failed.")
 
@@ -169,7 +172,7 @@ async def scrape_page_data(url: str) -> dict[str, Any]:
 
 
 async def _scrape_topic_data(url: str, scraper_name: str | None) -> dict[str, Any]:
-    import nhvr_mcp.scraper as scraper_module
+    import nhvrcontrib.scraper as scraper_module
 
     if scraper_name:
         scraper_function = getattr(scraper_module, scraper_name)
@@ -254,9 +257,19 @@ def _friendly_error_message(error: Exception) -> str:
 
 
 def _invalid_choice(label: str, value: str, options: Any) -> dict[str, Any]:
-    valid_options = ", ".join(sorted(str(option) for option in options if not str(option).startswith("overview")))
+    valid_options = ", ".join(sorted(str(option) for option in options if not _is_metadata_key(str(option))))
     return NhvrToolsError(
         message=f"Unknown {label}: {value}.",
         suggestion=f"Valid options: {valid_options}.",
         code="invalid_option",
     ).to_dict()
+
+
+def _with_section_reference(data: dict[str, Any], section_reference: str | None) -> dict[str, Any]:
+    response = dict(data)
+    response["section_reference"] = section_reference
+    return response
+
+
+def _is_metadata_key(value: str) -> bool:
+    return value == "section_reference" or value.startswith("overview")

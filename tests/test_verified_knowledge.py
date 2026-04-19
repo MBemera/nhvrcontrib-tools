@@ -1,4 +1,11 @@
-from nhvr_mcp.knowledge import ACCREDITATION_INFO, DIMENSION_LIMITS, FATIGUE_RULES, HML_INFO, MASS_LIMITS, PERMIT_TYPES
+from nhvrcontrib.knowledge import (
+    ACCREDITATION_INFO,
+    DIMENSION_LIMITS,
+    FATIGUE_RULES,
+    HML_INFO,
+    MASS_LIMITS,
+    PERMIT_TYPES,
+)
 
 
 def test_standard_two_up_rules_match_current_nhvr_guidance() -> None:

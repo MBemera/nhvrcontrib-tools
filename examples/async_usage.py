@@ -2,7 +2,7 @@
 
 import asyncio
 
-from nhvr_mcp import NHVR
+from nhvrcontrib import NHVR
 
 
 async def main():

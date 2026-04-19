@@ -15,8 +15,14 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from nhvrcontrib.credentials import store_keyring_api_key
+
 USE_COLOR = sys.stdout.isatty() and (os.name != "nt" or os.environ.get("WT_SESSION"))
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MCP_SERVER_NAME = "nhvrcontrib-tools"
+LEGACY_MCP_SERVER_NAME = "nhvr-tools"
+MCP_SERVER_MODULE = "nhvrcontrib.server"
+MCP_SERVER_TITLE = "NHVR Contrib Tools"
 
 
 def _color(code: str, text: str) -> str:
@@ -46,7 +52,7 @@ def cyan(text: str) -> str:
 def banner() -> None:
     print()
     print(bold("=" * 56))
-    print(bold("   NHVR Tools Setup"))
+    print(bold("   NHVR Contrib Tools Setup"))
     print(bold("   Claude Desktop / MCP Configuration"))
     print(bold("=" * 56))
     print()
@@ -118,7 +124,7 @@ class PromptSession:
 def parse_args(argv: Sequence[str] | None = None) -> WizardOptions:
     parser = argparse.ArgumentParser(
         prog="nhvr-setup",
-        description="Configure NHVR Tools for Claude Desktop / MCP.",
+        description="Configure NHVR Contrib Tools for Claude Desktop / MCP.",
     )
     parser.add_argument(
         "-y",
@@ -128,7 +134,7 @@ def parse_args(argv: Sequence[str] | None = None) -> WizardOptions:
     )
     parser.add_argument(
         "--api-key",
-        help="Set NHVR_API_KEY in the generated Claude Desktop entry.",
+        help="Store the NHVR API key in the machine credential manager used by desktop installs.",
     )
     parser.add_argument(
         "--print-config",
@@ -214,7 +220,7 @@ def ensure_mcp_dependencies(prompts: PromptSession) -> bool:
         print('  Run manually: ' + cyan('pip install -e ".[mcp]"'))
         return False
 
-    print('  Install it first: ' + cyan('pip install "nhvr-tools[mcp]"'))
+    print('  Install it first: ' + cyan('pip install "nhvrcontrib-tools[mcp]"'))
     return False
 
 
@@ -235,7 +241,7 @@ def configure_optional_scraper(prompts: PromptSession) -> None:
 
     if not module_is_available("playwright.async_api"):
         warn("Playwright is not installed.")
-        print('  Install later with: ' + cyan('pip install "nhvr-tools[scraper]"'))
+        print('  Install later with: ' + cyan('pip install "nhvrcontrib-tools[scraper]"'))
         print(f"  Then install the browser with: {cyan('playwright install chromium')}")
         return
 
@@ -253,47 +259,41 @@ def configure_optional_scraper(prompts: PromptSession) -> None:
     warn("Skipped browser install.")
 
 
-def configure_api_key(prompts: PromptSession, options: WizardOptions) -> str | None:
+def configure_api_key(prompts: PromptSession, options: WizardOptions) -> None:
     step(4, "Optional NHVR API key")
     print(
         textwrap.indent(
             textwrap.dedent(
                 """\
                 Registration lookups need an NHVR API key. If you do not have one,
-                press Enter to skip this step. All static knowledge tools will still work.
+                press Enter to skip this step. On desktop installs the key is stored
+                in your system credential manager, not in Claude Desktop's JSON config.
                 """
             ),
             "  ",
         )
     )
 
-    if options.api_key:
-        ok("The API key will be added to the MCP server environment.")
-        return options.api_key
+    api_key = options.api_key or prompts.text("NHVR API key (or press Enter to skip):")
+    if not api_key:
+        warn("Skipped API key setup.")
+        return
 
-    api_key = prompts.text("NHVR API key (or press Enter to skip):")
-    if api_key:
-        ok("The API key will be added to the MCP server environment.")
-        return api_key
+    if store_keyring_api_key(api_key):
+        ok("The API key was stored in your system credential manager.")
+        return
 
-    warn("Skipped API key setup.")
-    return None
+    warn("Could not store the API key in the system credential manager.")
 
 
 def configure_claude_desktop(
     prompts: PromptSession,
-    api_key: str | None,
     print_config_only: bool = False,
 ) -> None:
     step(5, "Configuring Claude Desktop")
 
     config_path = get_claude_config_path()
-    server_entry: dict[str, object] = {
-        "command": sys.executable,
-        "args": ["-m", "nhvr_mcp.server"],
-    }
-    if api_key:
-        server_entry["env"] = {"NHVR_API_KEY": api_key}
+    server_entry = build_server_entry()
 
     print(f"  Config file: {cyan(str(config_path))}")
     print()
@@ -315,27 +315,38 @@ def configure_claude_desktop(
         mcp_servers = {}
         config["mcpServers"] = mcp_servers
 
-    if "nhvr-tools" in mcp_servers:
+    migration_status = migrate_plaintext_api_key(mcp_servers)
+    existing_entry_name = get_existing_server_name(mcp_servers)
+    if migration_status == "failed":
+        warn("Could not migrate the existing plaintext NHVR API key into your system credential manager.")
+        warn("Kept the existing Claude Desktop config unchanged so the credential is not lost.")
+        return
+
+    if existing_entry_name:
         overwrite_existing = prompts.confirm(
-            "An NHVR Tools entry already exists. Replace it?",
-            default=False,
+            f"An {MCP_SERVER_TITLE} entry already exists. Replace it?",
+            default=True,
             safe_default=False,
         )
         if not overwrite_existing:
-            ok("Kept the existing NHVR Tools entry.")
+            if migration_status == "migrated":
+                write_updated_config(config_path, config)
+                ok("Migrated the plaintext NHVR API key into your system credential manager.")
+            ok(f"Kept the existing {MCP_SERVER_TITLE} entry.")
             return
 
-    mcp_servers["nhvr-tools"] = server_entry
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    backup_config_file(config_path, "Previous Claude Desktop config was backed up.", notify=False)
-    write_json_file_atomic(config_path, config)
+    mcp_servers.pop(LEGACY_MCP_SERVER_NAME, None)
+    mcp_servers[MCP_SERVER_NAME] = server_entry
+    write_updated_config(config_path, config)
+    if migration_status == "migrated":
+        ok("Migrated the plaintext NHVR API key into your system credential manager.")
     ok("Claude Desktop config updated.")
     print(f"  {yellow('Restart Claude Desktop after setup.')}")
 
 
 def test_server() -> bool:
     step(6, "Quick verification")
-    import_result = run([sys.executable, "-c", "from nhvr_mcp.server import mcp; print('ok')"])
+    import_result = run([sys.executable, "-c", "from nhvrcontrib.server import mcp; print('ok')"])
     if import_result.returncode == 0 and "ok" in import_result.stdout:
         ok("The MCP server module imports correctly.")
     else:
@@ -344,7 +355,7 @@ def test_server() -> bool:
         return False
 
     if module_is_available("click"):
-        cli_result = run([sys.executable, "-m", "nhvr_mcp.cli", "--help"])
+        cli_result = run([sys.executable, "-m", "nhvrcontrib.cli", "--help"])
         if cli_result.returncode == 0:
             ok("The CLI is available.")
         else:
@@ -365,7 +376,7 @@ def finish() -> None:
     print("  Next steps:")
     print("  1. Restart Claude Desktop.")
     print(f"  2. Ask a question like {cyan('What are the BFM fatigue rules?')}")
-    print('  3. Optional scraper support: ' + cyan('pip install "nhvr-tools[scraper]"'))
+    print('  3. Optional scraper support: ' + cyan('pip install "nhvrcontrib-tools[scraper]"'))
     print(f"     Then run: {cyan('playwright install chromium')}")
     print()
 
@@ -401,11 +412,52 @@ def read_config_file(config_path: Path) -> dict:
 def print_manual_config(server_entry: dict[str, object], config_path: Path) -> None:
     print()
     print("  Add this entry under `mcpServers` in your Claude Desktop config:")
-    snippet = json.dumps({"nhvr-tools": build_display_server_entry(server_entry)}, indent=2)
+    snippet = json.dumps({MCP_SERVER_NAME: server_entry}, indent=2)
     for line in snippet.splitlines():
         print(f"    {line}")
     print()
+    print("  Desktop registration lookups read the API key from your system credential manager.")
     print(f"  Config path: {cyan(str(config_path))}")
+
+
+def build_server_entry() -> dict[str, object]:
+    return {
+        "command": sys.executable,
+        "args": ["-m", MCP_SERVER_MODULE],
+    }
+
+
+def get_existing_server_name(mcp_servers: dict[str, object]) -> str | None:
+    if MCP_SERVER_NAME in mcp_servers:
+        return MCP_SERVER_NAME
+    if LEGACY_MCP_SERVER_NAME in mcp_servers:
+        return LEGACY_MCP_SERVER_NAME
+    return None
+
+
+def migrate_plaintext_api_key(mcp_servers: dict[str, object]) -> str:
+    for server_name in (MCP_SERVER_NAME, LEGACY_MCP_SERVER_NAME):
+        server_entry = mcp_servers.get(server_name)
+        if not isinstance(server_entry, dict):
+            continue
+
+        env = server_entry.get("env")
+        if not isinstance(env, dict):
+            continue
+
+        api_key = env.get("NHVR_API_KEY")
+        if not isinstance(api_key, str) or not api_key:
+            continue
+
+        if not store_keyring_api_key(api_key):
+            return "failed"
+
+        env.pop("NHVR_API_KEY", None)
+        if not env:
+            server_entry.pop("env", None)
+        return "migrated"
+
+    return "none"
 
 
 def backup_config_file(config_path: Path, reason: str, notify: bool = True) -> Path | None:
@@ -440,31 +492,6 @@ def write_json_file_atomic(config_path: Path, config: dict[str, object]) -> None
         raise
 
 
-def build_display_server_entry(server_entry: dict[str, object]) -> dict[str, object]:
-    env = server_entry.get("env")
-    if not isinstance(env, dict):
-        return dict(server_entry)
-
-    display_env = dict(env)
-    api_key = display_env.get("NHVR_API_KEY")
-    if isinstance(api_key, str):
-        # Mask the API key in terminal output only. The config file must keep the
-        # original value so the MCP server can authenticate correctly.
-        display_env["NHVR_API_KEY"] = mask_secret(api_key)
-
-    display_server_entry = dict(server_entry)
-    display_server_entry["env"] = display_env
-    return display_server_entry
-
-
-def mask_secret(value: str) -> str:
-    if not value:
-        return ""
-    if len(value) <= 4:
-        return "*" * len(value)
-    return "*" * (len(value) - 4) + value[-4:]
-
-
 def module_is_available(module_name: str) -> bool:
     try:
         return importlib.util.find_spec(module_name) is not None
@@ -482,6 +509,12 @@ def print_recent_stderr(result: subprocess.CompletedProcess[str]) -> None:
         print(f"    {line}")
 
 
+def write_updated_config(config_path: Path, config: dict[str, object]) -> None:
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    backup_config_file(config_path, "Previous Claude Desktop config was backed up.", notify=False)
+    write_json_file_atomic(config_path, config)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     options = parse_args(argv)
     prompts = build_prompt_session(options)
@@ -492,8 +525,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
 
     configure_optional_scraper(prompts)
-    api_key = configure_api_key(prompts, options)
-    configure_claude_desktop(prompts, api_key, print_config_only=options.print_config)
+    configure_api_key(prompts, options)
+    configure_claude_desktop(prompts, print_config_only=options.print_config)
     test_server()
     finish()
     return 0

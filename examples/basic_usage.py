@@ -1,6 +1,6 @@
 """Basic SDK usage — all sync, no API key needed."""
 
-from nhvr_mcp import NHVR
+from nhvrcontrib import NHVR
 
 client = NHVR()
 
@@ -15,7 +15,7 @@ for period, rule in rules["solo_driver"].items():
 print("\n=== Mass Limits (with HML) ===")
 limits = client.mass_limits(include_hml=True)
 print(f"Steer axle: {limits['general']['steer_axle']}")
-print(f"HML B-double gross: {limits['hml']['b_double_gross']}")
+print(f"HML tri-axle group: {limits['hml']['tri_axle_group']}")
 
 # --- Dimension limits ---
 print("\n=== Dimension Limits ===")

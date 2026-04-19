@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "nhvr-tools"
-version = "0.3.0"
+name = "nhvrcontrib-tools"
+version = "0.4.0"
 description = "Python SDK, MCP server, and CLI for Australian heavy vehicle compliance — fatigue rules, mass limits, dimensions, chain of responsibility, and more."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -39,6 +39,7 @@ classifiers = [
 dependencies = [
   "httpx>=0.24",
   "beautifulsoup4>=4.12",
+  "keyring>=25.0",
 ]
 
 [project.optional-dependencies]
@@ -53,10 +54,11 @@ scraper = [
   "playwright>=1.40",
 ]
 all = [
-  "nhvr-tools[mcp,cli,scraper]",
+  "nhvrcontrib-tools[mcp,cli,scraper]",
 ]
 dev = [
-  "nhvr-tools[all]",
+  "nhvrcontrib-tools[all]",
+  "detect-secrets>=1.5.0",
   "pytest>=7.0",
   "pytest-asyncio>=0.21",
   "ruff>=0.4",
@@ -65,18 +67,18 @@ dev = [
 ]
 
 [project.scripts]
-nhvr = "nhvr_mcp.cli:main"
-nhvr-setup = "nhvr_mcp.install_wizard:main"
+nhvr = "nhvrcontrib.cli:main"
+nhvr-setup = "nhvrcontrib.install_wizard:main"
 
 [project.urls]
-Homepage = "https://github.com/MBemera/nhvr-tools"
-Documentation = "https://github.com/MBemera/nhvr-tools#readme"
-Repository = "https://github.com/MBemera/nhvr-tools"
-Issues = "https://github.com/MBemera/nhvr-tools/issues"
-Changelog = "https://github.com/MBemera/nhvr-tools/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/MBemera/nhvrcontrib-tools"
+Documentation = "https://github.com/MBemera/nhvrcontrib-tools#readme"
+Repository = "https://github.com/MBemera/nhvrcontrib-tools"
+Issues = "https://github.com/MBemera/nhvrcontrib-tools/issues"
+Changelog = "https://github.com/MBemera/nhvrcontrib-tools/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["nhvr_mcp"]
+packages = ["nhvrcontrib"]
 
 [tool.pytest.ini_options]
 addopts = "-q --import-mode=importlib"

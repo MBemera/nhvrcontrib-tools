@@ -1,16 +1,21 @@
-# NHVR Tools
+# NHVR Contrib Tools
 
 > Python SDK, MCP server, and CLI for Australian heavy vehicle compliance data.
 
-[![PyPI version](https://img.shields.io/pypi/v/nhvr-tools?cacheSeconds=60)](https://pypi.org/project/nhvr-tools/)
-[![PyPI downloads](https://img.shields.io/pypi/dm/nhvr-tools?cacheSeconds=60)](https://pypi.org/project/nhvr-tools/)
-[![Python](https://img.shields.io/pypi/pyversions/nhvr-tools?cacheSeconds=60)](https://pypi.org/project/nhvr-tools/)
-[![CI](https://github.com/MBemera/nhvr-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/MBemera/nhvr-tools/actions/workflows/ci.yml)
+[![CI](https://github.com/MBemera/nhvrcontrib-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/MBemera/nhvrcontrib-tools/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-`nhvr-tools` gives you quick access to fatigue rules, mass limits, dimension limits, Chain of Responsibility duties, accreditation guidance, permits, breach categories, and NHVR registration lookups.
+`nhvrcontrib-tools` gives you quick access to fatigue rules, mass limits, dimension limits, Chain of Responsibility duties, accreditation guidance, permits, breach categories, and NHVR registration lookups.
 
-The PyPI package name is `nhvr-tools`. The Python import path is `nhvr_mcp`.
+> This project is an independent community contribution. It is not published, operated, or endorsed by the NHVR.
+
+> HVNL reform note: the NHVR's [HVNL reform implementation page](https://www.nhvr.gov.au/law-policies/hvnl-reform-implementation) says the amended HVNL is expected to commence in mid-2026. The NHVR's HVA transition FAQs say it is working towards **1 July 2026**, subject to ministerial approval. That transition also progressively replaces NHVAS with the Heavy Vehicle Accreditation (HVA) scheme.
+
+The upcoming `v0.4.0` release uses:
+
+- Distribution name: `nhvrcontrib-tools`
+- Python import path: `nhvrcontrib`
+- CLI commands: `nhvr`, `nhvr-setup`
 
 ## Quick Start
 
@@ -18,30 +23,23 @@ Choose the smallest install that matches your use case:
 
 | Use case | Install command | First command to try |
 | --- | --- | --- |
-| Python SDK | `pip install nhvr-tools` | `python -c "from nhvr_mcp import NHVR; print(NHVR().fatigue_rules()['summary'])"` |
-| CLI | `pip install "nhvr-tools[cli]"` | `nhvr fatigue rules` |
-| Claude Desktop / MCP | `pip install "nhvr-tools[mcp]"` | `nhvr-setup` |
-| Live NHVR page scraping | `pip install "nhvr-tools[scraper]"` | `playwright install chromium` |
-| Everything | `pip install "nhvr-tools[all]"` | `nhvr --help` |
+| Python SDK | `pip install nhvrcontrib-tools` | `python -c "from nhvrcontrib import NHVR; print(NHVR().fatigue_rules()['summary'])"` |
+| CLI | `pip install "nhvrcontrib-tools[cli]"` | `nhvr fatigue rules` |
+| Claude Desktop / MCP | `pip install "nhvrcontrib-tools[mcp]"` | `nhvr-setup` |
+| Live NHVR page scraping | `pip install "nhvrcontrib-tools[scraper]"` | `playwright install chromium` |
+| Everything | `pip install "nhvrcontrib-tools[all]"` | `nhvr --help` |
 
 Playwright is optional. Base imports, SDK usage, CLI help, CLI knowledge commands, and MCP server startup work without it.
 
 ## Install
 
-### Install From PyPI
-
-```bash
-pip install nhvr-tools
-pip install "nhvr-tools[cli]"
-pip install "nhvr-tools[mcp]"
-pip install "nhvr-tools[all]"
-```
+`nhvrcontrib-tools` is the package name for the renamed `v0.4.0` release. If that release is not yet on PyPI, install from source or from a local wheel.
 
 ### Install From Source
 
 ```bash
-git clone https://github.com/MBemera/nhvr-tools.git
-cd nhvr-tools
+git clone https://github.com/MBemera/nhvrcontrib-tools.git
+cd nhvrcontrib-tools
 pip install -e ".[dev]"
 ```
 
@@ -53,10 +51,17 @@ pip install -e ".[cli]"
 pip install -e ".[mcp]"
 ```
 
+### Install From A Wheel
+
+```bash
+python -m build
+pip install dist/nhvrcontrib_tools-0.4.0-py3-none-any.whl
+```
+
 ### Optional Playwright Install
 
 ```bash
-pip install "nhvr-tools[scraper]"
+pip install "nhvrcontrib-tools[scraper]"
 playwright install chromium
 ```
 
@@ -67,11 +72,11 @@ If Playwright is missing, scraper-specific commands return a readable install hi
 ### Recommended Setup
 
 ```bash
-pip install "nhvr-tools[mcp]"
+pip install "nhvrcontrib-tools[mcp]"
 nhvr-setup
 ```
 
-`nhvr-setup` checks the MCP dependency, offers optional API key and Playwright guidance, writes the Claude Desktop config, and verifies that the server imports correctly.
+`nhvr-setup` checks the MCP dependency, offers optional Playwright guidance, stores the NHVR API key in your machine credential manager, writes the Claude Desktop config, and verifies that the server imports correctly.
 
 Useful setup commands:
 
@@ -83,6 +88,28 @@ nhvr-setup --yes --api-key "your-nhvr-api-key"
 
 `nhvr-setup` is safe in non-interactive shells. If there is no stdin, it prints the config snippet instead of crashing or silently overwriting files.
 
+### Responsible Use
+
+The built-in knowledge tools return cached summaries with provenance footers:
+
+- `nhvr_get_fatigue_rules`
+- `nhvr_get_mass_limits`
+- `nhvr_get_dimension_limits`
+- `nhvr_get_breach_categories`
+- `nhvr_get_speed_limits`
+- `nhvr_get_cor_duties`
+- `nhvr_get_accreditation_info`
+- `nhvr_get_permit_types`
+- `nhvr_get_hml_info`
+
+The live-access tools depend on current NHVR systems or live web content:
+
+- `nhvr_search_vehicle_registration`
+- `nhvr_search_regulations`
+- `nhvr_scrape_page`
+
+Access to the live endpoints should stay within the audience and use case your NHVR API key or operational approval was issued for. The registration endpoint is monitored and is intended for operator fleet management, not bulk extracts.
+
 ### Manual Claude Desktop Config
 
 Claude Desktop config paths:
@@ -91,32 +118,32 @@ Claude Desktop config paths:
 - Linux: `~/.config/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
-Use the same Python interpreter that has `nhvr-tools[mcp]` installed:
+Use the same Python interpreter that has `nhvrcontrib-tools[mcp]` installed:
 
 ```json
 {
   "mcpServers": {
-    "nhvr-tools": {
+    "nhvrcontrib-tools": {
       "command": "python3",
-      "args": ["-m", "nhvr_mcp.server"]
+      "args": ["-m", "nhvrcontrib.server"]
     }
   }
 }
 ```
 
-If you use registration lookups, add `NHVR_API_KEY` to the `env` block.
+Desktop registration lookups read the API key from the machine credential manager. For CI, Docker, or other non-desktop environments, keep using `NHVR_API_KEY`.
 
 ### Run The MCP Server Directly
 
 ```bash
 # stdio transport
-python -m nhvr_mcp.server
+python -m nhvrcontrib.server
 
 # HTTP transport
 NHVR_MCP_TRANSPORT=streamable_http \
 NHVR_MCP_HOST=0.0.0.0 \
 NHVR_MCP_PORT=8080 \
-python -m nhvr_mcp.server
+python -m nhvrcontrib.server
 ```
 
 ### Available MCP Tools
@@ -132,7 +159,7 @@ python -m nhvr_mcp.server
 | `nhvr_get_accreditation_info` | NHVAS and HVA guidance |
 | `nhvr_get_permit_types` | Access permit types |
 | `nhvr_get_hml_info` | Higher Mass Limits guidance |
-| `nhvr_search_vehicle_registration` | Vehicle registration lookup |
+| `nhvr_search_vehicle_registration` | Vehicle registration lookup. Monitored by NHVR. Intended for operator fleet management, not bulk extracts. |
 | `nhvr_search_regulations` | Natural-language topic search with fallback suggestions |
 | `nhvr_scrape_page` | Scrape a specific `nhvr.gov.au` page |
 
@@ -141,7 +168,7 @@ python -m nhvr_mcp.server
 Install:
 
 ```bash
-pip install "nhvr-tools[cli]"
+pip install "nhvrcontrib-tools[cli]"
 ```
 
 Common commands:
@@ -163,10 +190,12 @@ nhvr --format json fatigue rules
 
 Search uses aliases and lightweight fuzzy matching. Queries like `bfm`, `afm`, `rest breaks`, `b-double mass`, `loader duty`, `executive due diligence`, `speed limiter`, and `oversize permits` resolve more reliably than plain substring matching. If there is no strong match, the CLI suggests likely topics instead of returning a dead end.
 
+Static markdown responses end with a source footer and verification date. JSON responses include the same provenance fields structurally.
+
 ## Python SDK
 
 ```python
-from nhvr_mcp import NHVR
+from nhvrcontrib import NHVR
 
 client = NHVR()
 
@@ -181,23 +210,20 @@ Async methods:
 
 ```python
 import asyncio
-from nhvr_mcp import NHVR
+from nhvrcontrib import NHVR
 
-client = NHVR(api_key="your-nhvr-api-key")
+client = NHVR()
 
 rego = asyncio.run(client.search_registration("ABC123"))
 search = asyncio.run(client.search("b-double mass"))
 page = asyncio.run(client.scrape("https://www.nhvr.gov.au/road-access/mass-and-dimension/mass-limits"))
 ```
 
-`search_registration()` needs an NHVR API key. `search()` and `scrape()` may use Playwright for live NHVR pages. If live scraping is unavailable, topic search falls back to the built-in knowledge base where possible.
+`search_registration()` resolves credentials in this order:
 
-Static knowledge responses include:
-
-- `source_title`
-- `source_url`
-- `last_verified`
-- `unofficial_warning`
+1. `api_key=` passed to `NHVR(...)`
+2. `NHVR_API_KEY` environment variable
+3. System credential manager entry created by `nhvr-setup`
 
 ## Docker
 
@@ -206,7 +232,7 @@ The default image runs the MCP server with the `mcp` extra installed. It is inte
 Build the image:
 
 ```bash
-docker build -t nhvr-tools .
+docker build -t nhvrcontrib-tools .
 ```
 
 ### Run MCP Over Stdio
@@ -214,7 +240,7 @@ docker build -t nhvr-tools .
 Use stdio mode when the container is attached directly to an MCP client process:
 
 ```bash
-docker run --rm -i nhvr-tools
+docker run --rm -i nhvrcontrib-tools
 ```
 
 ### Run MCP Over HTTP
@@ -225,7 +251,7 @@ docker run --rm \
   -e NHVR_MCP_TRANSPORT=streamable_http \
   -e NHVR_MCP_HOST=0.0.0.0 \
   -e NHVR_MCP_PORT=8080 \
-  nhvr-tools
+  nhvrcontrib-tools
 ```
 
 Then connect your MCP-capable client to port `8080`.
@@ -237,7 +263,7 @@ Then connect your MCP-capable client to port `8080`.
 | `NHVR_MCP_TRANSPORT` | MCP transport mode: `stdio` or `streamable_http` | `stdio` |
 | `NHVR_MCP_HOST` | HTTP bind host | `0.0.0.0` |
 | `NHVR_MCP_PORT` | HTTP port | `8080` |
-| `NHVR_API_KEY` | Enables registration lookups | unset |
+| `NHVR_API_KEY` | Enables registration lookups in Docker and CI | unset |
 
 ### Docker Note About Scraping
 
@@ -246,7 +272,7 @@ The default image does not install Playwright. That keeps the container smaller 
 If you need live NHVR scraping inside Docker, extend the image with:
 
 ```bash
-pip install "nhvr-tools[scraper]"
+pip install "nhvrcontrib-tools[scraper]"
 playwright install chromium
 ```
 
@@ -263,7 +289,7 @@ That usually means the command ran without interactive stdin. Run `nhvr-setup` i
 Install the MCP extra:
 
 ```bash
-pip install "nhvr-tools[mcp]"
+pip install "nhvrcontrib-tools[mcp]"
 ```
 
 ### Scraper command says Playwright is required
@@ -271,20 +297,28 @@ pip install "nhvr-tools[mcp]"
 Install scraper support and the browser:
 
 ```bash
-pip install "nhvr-tools[scraper]"
+pip install "nhvrcontrib-tools[scraper]"
 playwright install chromium
 ```
 
 ### Registration lookup says an API key is required
 
-Set the environment variable or pass it directly:
+For Docker, CI, or shell usage:
 
 ```bash
 export NHVR_API_KEY="your-key"
 ```
 
+For desktop usage:
+
+```bash
+nhvr-setup --api-key "your-key"
+```
+
+Or pass it directly in code:
+
 ```python
-from nhvr_mcp import NHVR
+from nhvrcontrib import NHVR
 
 client = NHVR(api_key="your-key")
 ```
@@ -309,6 +343,7 @@ Run the local checks:
 
 ```bash
 ruff check .
+git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline
 pytest
 python -m build
 python -m twine check dist/*
@@ -320,9 +355,10 @@ Built-in knowledge is based on official NHVR and HVNL material, including:
 
 - [NHVR website](https://www.nhvr.gov.au/)
 - [Heavy Vehicle National Law and regulations](https://www.nhvr.gov.au/law-policies/heavy-vehicle-national-law-and-regulations)
+- [Queensland legislation view of the HVNL](https://www.legislation.qld.gov.au/view/whole/html/inforce/current/act-2012-hvnlq)
 - [NHVR developer portal](https://api-portal.nhvr.gov.au/)
 
-This project is **unofficial**. It is not affiliated with or endorsed by the NHVR. Always verify operational and legal requirements against current official sources.
+This repository remains unofficial. Always verify operational and legal requirements against current official sources.
 
 ## License
 

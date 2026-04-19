@@ -7,7 +7,8 @@ import re
 
 import httpx
 
-from nhvr_mcp.errors import NhvrToolsError
+from nhvrcontrib.credentials import get_keyring_api_key
+from nhvrcontrib.errors import NhvrToolsError
 
 PLATE_NUMBER_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 -]{0,15}$")
 
@@ -15,7 +16,7 @@ PLATE_NUMBER_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 -]{0,15}$")
 class NhvrApiClient:
     def __init__(self, api_key: str | None = None) -> None:
         self.base_url = "https://api-public.nhvr.gov.au"
-        self.api_key = api_key or os.getenv("NHVR_API_KEY")
+        self.api_key = api_key or os.getenv("NHVR_API_KEY") or get_keyring_api_key()
 
     async def search_vehicle_registration(self, plate_number: str) -> dict:
         normalized_plate_number = self._normalize_plate_number(plate_number)

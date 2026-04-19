@@ -1,6 +1,6 @@
 from click.testing import CliRunner
 
-from nhvr_mcp.cli import cli
+from nhvrcontrib.cli import cli
 
 
 def test_cli_help_runs() -> None:
@@ -18,7 +18,7 @@ def test_cli_fatigue_rules_command() -> None:
 
     assert result.exit_code == 0
     assert "Summary" in result.output
-    assert "Provenance" in result.output
+    assert "_Source: [" in result.output
 
 
 def test_cli_invalid_breach_type_returns_nonzero() -> None:

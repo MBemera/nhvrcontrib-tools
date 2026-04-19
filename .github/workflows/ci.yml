@@ -14,13 +14,13 @@ jobs:
         include:
           - profile: base
             install: pip install -e .
-            verify: python -c "import nhvr_mcp, nhvr_mcp.sdk, nhvr_mcp.tools, nhvr_mcp.scraper; print('base-ok')"
+            verify: python -c "import nhvrcontrib, nhvrcontrib.sdk, nhvrcontrib.tools, nhvrcontrib.scraper; print('base-ok')"
           - profile: cli
             install: pip install -e ".[cli]"
-            verify: python -m nhvr_mcp.cli --help
+            verify: python -m nhvrcontrib.cli --help
           - profile: mcp
             install: pip install -e ".[mcp]"
-            verify: python -c "from nhvr_mcp.server import mcp; print('mcp-ok')"
+            verify: python -c "from nhvrcontrib.server import mcp; print('mcp-ok')"
 
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
 
       - name: Verify CLI knowledge command
         if: matrix.profile == 'cli'
-        run: python -m nhvr_mcp.cli fatigue rules
+        run: python -m nhvrcontrib.cli fatigue rules
 
   test:
     runs-on: ubuntu-latest
@@ -64,6 +64,9 @@ jobs:
 
       - name: Install dependencies
         run: pip install -e ".[dev]"
+
+      - name: Detect secrets
+        run: git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline
 
       - name: Lint
         run: ruff check .
@@ -98,7 +101,7 @@ jobs:
         run: |
           python -m venv .package-smoke
           .package-smoke/bin/pip install dist/*.whl click fastmcp "pydantic>=2.0"
-          .package-smoke/bin/python -c "import nhvr_mcp, nhvr_mcp.sdk, nhvr_mcp.tools, nhvr_mcp.scraper; print('artifact-base-ok')"
-          .package-smoke/bin/python -c "from nhvr_mcp.server import mcp; print(type(mcp).__name__)"
+          .package-smoke/bin/python -c "import nhvrcontrib, nhvrcontrib.sdk, nhvrcontrib.tools, nhvrcontrib.scraper; print('artifact-base-ok')"
+          .package-smoke/bin/python -c "from nhvrcontrib.server import mcp; print(type(mcp).__name__)"
           .package-smoke/bin/nhvr --help
           .package-smoke/bin/nhvr-setup --help

@@ -1,4 +1,4 @@
-from nhvr_mcp.section_parsers import parse_breach_categorisation
+from nhvrcontrib.section_parsers import parse_breach_categorisation
 
 
 def test_parse_breach_categorisation_basic():

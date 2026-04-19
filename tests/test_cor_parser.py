@@ -1,4 +1,4 @@
-from nhvr_mcp.section_parsers import parse_cor_duties, parse_cor_sub_page
+from nhvrcontrib.section_parsers import parse_cor_duties, parse_cor_sub_page
 
 
 def test_parse_cor_duties_basic():

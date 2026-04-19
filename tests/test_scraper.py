@@ -2,9 +2,9 @@ import asyncio
 
 import pytest
 
-from nhvr_mcp import scraper
-from nhvr_mcp.errors import NhvrToolsError
-from nhvr_mcp.section_parsers import CorDuties
+from nhvrcontrib import scraper
+from nhvrcontrib.errors import NhvrToolsError
+from nhvrcontrib.section_parsers import CorDuties
 
 
 @pytest.mark.parametrize(
@@ -35,7 +35,7 @@ def test_scrape_cor_duties_reports_partial_sub_page_failures(monkeypatch: pytest
 
     monkeypatch.setattr(scraper, "fetch_page", fake_fetch_page)
 
-    import nhvr_mcp.section_parsers as section_parsers
+    import nhvrcontrib.section_parsers as section_parsers
 
     monkeypatch.setattr(
         section_parsers,

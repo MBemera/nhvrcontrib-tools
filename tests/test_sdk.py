@@ -1,6 +1,6 @@
 """Tests for the NHVR Python SDK."""
 
-from nhvr_mcp import NHVR
+from nhvrcontrib import NHVR
 
 
 def test_fatigue_rules_default():

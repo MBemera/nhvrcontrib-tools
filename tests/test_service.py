@@ -1,20 +1,20 @@
 import asyncio
 import importlib
 
-from nhvr_mcp import service
-from nhvr_mcp.errors import NhvrToolsError
+from nhvrcontrib import service
+from nhvrcontrib.errors import NhvrToolsError
 
 
 def test_tools_import_path_is_clean() -> None:
-    tools_module = importlib.import_module("nhvr_mcp.tools")
-    sdk_module = importlib.import_module("nhvr_mcp.sdk")
+    tools_module = importlib.import_module("nhvrcontrib.tools")
+    sdk_module = importlib.import_module("nhvrcontrib.sdk")
 
     assert hasattr(tools_module, "get_fatigue_rules")
     assert hasattr(sdk_module, "NHVR")
 
 
 def test_server_import_path_is_clean() -> None:
-    server_module = importlib.import_module("nhvr_mcp.server")
+    server_module = importlib.import_module("nhvrcontrib.server")
     assert hasattr(server_module, "run_server")
 
 
@@ -90,7 +90,7 @@ def test_search_returns_suggestions_for_unknown_queries() -> None:
 
 
 def test_scrape_page_reports_missing_playwright(monkeypatch) -> None:
-    scraper_module = importlib.import_module("nhvr_mcp.scraper")
+    scraper_module = importlib.import_module("nhvrcontrib.scraper")
 
     def fail_playwright():
         raise NhvrToolsError(

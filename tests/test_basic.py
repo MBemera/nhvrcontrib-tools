@@ -1,6 +1,6 @@
-from nhvr_mcp.formatters import format_response
-from nhvr_mcp.knowledge import FATIGUE_RULES
-from nhvr_mcp.tools import get_fatigue_rules, get_mass_limits
+from nhvrcontrib.formatters import format_response
+from nhvrcontrib.knowledge import FATIGUE_RULES
+from nhvrcontrib.tools import get_fatigue_rules, get_mass_limits
 
 
 def test_format_response_json():
@@ -18,4 +18,6 @@ def test_format_response_markdown_sections():
 
     assert "## General" in result
     assert "## HML" in result
-    assert "## Provenance" in result
+    assert "## Provenance" not in result
+    assert "_Source: [" in result
+    assert "(verified 2026-04-11)" in result

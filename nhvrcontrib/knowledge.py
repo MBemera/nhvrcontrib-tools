@@ -8,9 +8,12 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+LEGISLATION_BASE_URL = "https://www.legislation.qld.gov.au/view/whole/html/inforce/current/act-2012-hvnlq"
+
 FATIGUE_RULES = {
     "standard": {
         "summary": "Standard hours – default work/rest option for all drivers without BFM/AFM accreditation.",
+        "section_reference": None,
         "solo_driver": {
             "in_any_5.5_hours": "Max 5 hours 15 min work, then ≥15 min continuous rest",
             "in_any_8_hours": "Max 7 hours 30 min work, then ≥30 min rest in blocks ≥15 min",
@@ -44,6 +47,7 @@ FATIGUE_RULES = {
     },
     "bfm": {
         "summary": "Basic Fatigue Management – NHVAS module allowing more flexible work/rest hours.",
+        "section_reference": None,
         "solo_driver": {
             "in_any_6.25_hours": "Max 6 hours work, then ≥15 min continuous rest",
             "in_any_9_hours": "Max 8 hours 30 min work, then ≥30 min rest in blocks ≥15 min",
@@ -73,6 +77,7 @@ FATIGUE_RULES = {
     },
     "afm": {
         "summary": "Advanced Fatigue Management – tailored work/rest hours via an NHVR-assessed safety case.",
+        "section_reference": None,
         "description": (
             "AFM is currently the only mechanism under the HVNL that can provide tailored "
             "work and rest hours. Applications are assessed against fatigue principles, "
@@ -136,6 +141,7 @@ MASS_LIMITS = {
 }
 
 DIMENSION_LIMITS = {
+    "section_reference": None,
     "height": (
         "4.3 m generally. Exceptions include livestock vehicles, vehicles built "
         "with at least 2 decks for carrying vehicles, and specified "
@@ -176,6 +182,7 @@ DIMENSION_LIMITS = {
 }
 
 BREACH_CATEGORIES = {
+    "section_reference": None,
     "categories": ["Minor", "Substantial", "Severe", "Critical (fatigue only)"],
     "mass": {
         "minor": "Exceeds mass limit by ≤5% (or ≤1 tonne for axle groups)",
@@ -205,6 +212,7 @@ BREACH_CATEGORIES = {
 }
 
 SPEED_LIMITS = {
+    "section_reference": None,
     "default": {
         "heavy_vehicle_speed_limit": (
             "Drivers must comply with posted limits and road rules. "
@@ -225,6 +233,7 @@ SPEED_LIMITS = {
 }
 
 COR_DUTIES = {
+    "section_reference": "sec.26C",
     "overview": (
         "The Chain of Responsibility (CoR) under the HVNL makes parties other than "
         "drivers responsible for heavy vehicle safety. Everyone involved in the supply "
@@ -267,6 +276,7 @@ COR_DUTIES = {
 }
 
 ACCREDITATION_INFO = {
+    "section_reference": None,
     "overview": (
         "The NHVAS is a national formal process for recognising operators with "
         "robust safety management systems. From mid-2026, NHVAS will be "
@@ -294,6 +304,7 @@ ACCREDITATION_INFO = {
 }
 
 PERMIT_TYPES = {
+    "section_reference": None,
     "overview": (
         "Restricted access vehicles may operate under notices or require "
         "permits depending on the vehicle class, network, and route."
@@ -351,6 +362,7 @@ PERMIT_TYPES = {
 }
 
 HML_INFO = {
+    "section_reference": None,
     "eligibility": {
         "summary": (
             "Vehicles or combinations running at HML on triaxle groups must be accredited under NHVAS Mass Management, "
@@ -376,6 +388,7 @@ HML_INFO = {
 }
 
 LAW_AND_REGULATIONS_INFO = {
+    "section_reference": None,
     "summary": (
         "The Heavy Vehicle National Law and associated regulations set the legal "
         "framework for heavy vehicle operations in participating jurisdictions."
@@ -392,6 +405,7 @@ LAW_AND_REGULATIONS_INFO = {
 }
 
 PBS_INFO = {
+    "section_reference": None,
     "summary": (
         "Performance Based Standards (PBS) vehicles are Class 2 heavy vehicles "
         "designed to meet safety and infrastructure performance standards rather "
@@ -482,5 +496,12 @@ KNOWLEDGE_PROVENANCE = {
 
 def attach_provenance(data: dict, knowledge_key: str) -> dict:
     response = deepcopy(data)
-    response["provenance"] = deepcopy(KNOWLEDGE_PROVENANCE[knowledge_key])
+    section_reference = response.pop("section_reference", None)
+
+    provenance = deepcopy(KNOWLEDGE_PROVENANCE[knowledge_key])
+    if section_reference:
+        provenance["section_reference"] = section_reference
+        provenance["deep_link_url"] = f"{LEGISLATION_BASE_URL}#{section_reference}"
+
+    response["provenance"] = provenance
     return response

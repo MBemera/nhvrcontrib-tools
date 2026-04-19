@@ -1,10 +1,10 @@
-# Contributing to NHVR Tools
+# Contributing to NHVR Contrib Tools
 
 ## Local Setup
 
 ```bash
-git clone https://github.com/MBemera/nhvr-tools.git
-cd nhvr-tools
+git clone https://github.com/MBemera/nhvrcontrib-tools.git
+cd nhvrcontrib-tools
 pip install -e ".[dev]"
 ```
 
@@ -46,7 +46,7 @@ python -m venv .package-smoke
 
 ## Updating The Knowledge Base
 
-The built-in data in `nhvr_mcp/knowledge.py` is sourced from the NHVR website and HVNL material.
+The built-in data in `nhvrcontrib/knowledge.py` is sourced from the NHVR website and HVNL material.
 
 When updating it:
 

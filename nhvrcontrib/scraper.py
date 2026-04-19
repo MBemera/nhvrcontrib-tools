@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 
-from nhvr_mcp.errors import NhvrToolsError
+from nhvrcontrib.errors import NhvrToolsError
 
 NHVR_DOMAIN = "nhvr.gov.au"
 
@@ -158,7 +158,7 @@ async def scrape_nhvr_page(url: str, use_playwright: bool = False) -> PageConten
 
 async def scrape_dimension_requirements(url: str, use_playwright: bool = False) -> dict:
     html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvr_mcp.section_parsers import parse_dimension_requirements
+    from nhvrcontrib.section_parsers import parse_dimension_requirements
 
     parsed = parse_dimension_requirements(html)
     return {
@@ -170,7 +170,7 @@ async def scrape_dimension_requirements(url: str, use_playwright: bool = False) 
 
 async def scrape_mass_limits(url: str, use_playwright: bool = False) -> dict:
     html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvr_mcp.section_parsers import parse_mass_limits
+    from nhvrcontrib.section_parsers import parse_mass_limits
 
     parsed = parse_mass_limits(html)
     return {
@@ -182,7 +182,7 @@ async def scrape_mass_limits(url: str, use_playwright: bool = False) -> dict:
 
 async def scrape_cor_duties(url: str, use_playwright: bool = False) -> dict:
     html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvr_mcp.section_parsers import parse_cor_duties, parse_cor_sub_page
+    from nhvrcontrib.section_parsers import parse_cor_duties, parse_cor_sub_page
 
     parsed = parse_cor_duties(html)
     result: dict = {
@@ -233,7 +233,7 @@ def _describe_scrape_error(error: Exception) -> str:
 
 async def scrape_fatigue_management(url: str, use_playwright: bool = False) -> dict:
     html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvr_mcp.section_parsers import parse_fatigue_management
+    from nhvrcontrib.section_parsers import parse_fatigue_management
 
     parsed = parse_fatigue_management(html)
     return {
@@ -246,7 +246,7 @@ async def scrape_fatigue_management(url: str, use_playwright: bool = False) -> d
 
 async def scrape_breach_categorisation(url: str, use_playwright: bool = False) -> dict:
     html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvr_mcp.section_parsers import parse_breach_categorisation
+    from nhvrcontrib.section_parsers import parse_breach_categorisation
 
     parsed = parse_breach_categorisation(html)
     return {
@@ -259,7 +259,7 @@ async def scrape_breach_categorisation(url: str, use_playwright: bool = False) -
 
 async def scrape_speed_limits(url: str, use_playwright: bool = False) -> dict:
     html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvr_mcp.section_parsers import parse_speed_limits
+    from nhvrcontrib.section_parsers import parse_speed_limits
 
     parsed = parse_speed_limits(html)
     return {
@@ -271,7 +271,7 @@ async def scrape_speed_limits(url: str, use_playwright: bool = False) -> dict:
 
 async def scrape_nhvas_info(url: str, use_playwright: bool = False) -> dict:
     html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvr_mcp.section_parsers import parse_nhvas_info
+    from nhvrcontrib.section_parsers import parse_nhvas_info
 
     parsed = parse_nhvas_info(html)
     return {
@@ -283,7 +283,7 @@ async def scrape_nhvas_info(url: str, use_playwright: bool = False) -> dict:
 
 async def scrape_permit_types(url: str, use_playwright: bool = False) -> dict:
     html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvr_mcp.section_parsers import parse_permit_types
+    from nhvrcontrib.section_parsers import parse_permit_types
 
     parsed = parse_permit_types(html)
     return {
@@ -299,7 +299,7 @@ def _get_async_playwright():
     except ModuleNotFoundError as error:
         raise NhvrToolsError(
             message="Playwright is required for NHVR scraping features.",
-            suggestion='Install `nhvr-tools[scraper]` and then run `playwright install chromium`.',
+            suggestion='Install `nhvrcontrib-tools[scraper]` and then run `playwright install chromium`.',
             technical_detail=str(error),
             code="missing_playwright",
         ) from error

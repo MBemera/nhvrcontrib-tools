@@ -1,4 +1,4 @@
-from nhvr_mcp.search_index import find_topic_match
+from nhvrcontrib.search_index import find_topic_match
 
 
 def test_find_topic_match_prefers_exact_afm_alias() -> None:

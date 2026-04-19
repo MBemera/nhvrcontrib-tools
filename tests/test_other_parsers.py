@@ -1,4 +1,4 @@
-from nhvr_mcp.section_parsers import (
+from nhvrcontrib.section_parsers import (
     parse_nhvas_info,
     parse_permit_types,
     parse_speed_limits,

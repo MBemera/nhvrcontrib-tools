@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-from nhvr_mcp.service import (
+from nhvrcontrib.service import (
     get_accreditation_info_data,
     get_breach_categories_data,
     get_cor_duties_data,

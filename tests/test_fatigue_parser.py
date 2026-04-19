@@ -1,4 +1,4 @@
-from nhvr_mcp.section_parsers import parse_fatigue_management
+from nhvrcontrib.section_parsers import parse_fatigue_management
 
 
 def test_parse_fatigue_management_basic():

@@ -1,4 +1,4 @@
-from nhvr_mcp.section_parsers import parse_mass_limits
+from nhvrcontrib.section_parsers import parse_mass_limits
 
 
 def test_parse_mass_limits_basic():

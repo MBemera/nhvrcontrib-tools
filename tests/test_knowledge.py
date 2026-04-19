@@ -1,6 +1,6 @@
 """Tests to verify knowledge base data is well-formed."""
 
-from nhvr_mcp.knowledge import (
+from nhvrcontrib.knowledge import (
     ACCREDITATION_INFO,
     BREACH_CATEGORIES,
     COR_DUTIES,

@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in nhvr-tools
+about: Report a bug in nhvrcontrib-tools
 title: ""
 labels: bug
 ---
@@ -12,7 +12,7 @@ A clear description of what the bug is.
 Steps or code to reproduce:
 
 ```python
-from nhvr_mcp import NHVR
+from nhvrcontrib import NHVR
 client = NHVR()
 # ...
 ```
@@ -23,4 +23,4 @@ What you expected to happen.
 **Environment**
 - OS:
 - Python version:
-- nhvr-tools version:
+- nhvrcontrib-tools version:

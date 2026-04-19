@@ -7,9 +7,9 @@ from typing import Any
 
 import click
 
-from nhvr_mcp.errors import is_error_response
-from nhvr_mcp.formatters import format_response
-from nhvr_mcp.service import (
+from nhvrcontrib.errors import is_error_response
+from nhvrcontrib.formatters import format_response
+from nhvrcontrib.service import (
     get_accreditation_info_data,
     get_breach_categories_data,
     get_cor_duties_data,

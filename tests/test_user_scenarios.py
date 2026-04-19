@@ -5,10 +5,10 @@ from typing import Any
 import pytest
 from click.testing import CliRunner
 
-from nhvr_mcp import NHVR, service
-from nhvr_mcp.cli import cli
-from nhvr_mcp.errors import NhvrToolsError
-from nhvr_mcp.formatters import format_response
+from nhvrcontrib import NHVR, service
+from nhvrcontrib.cli import cli
+from nhvrcontrib.errors import NhvrToolsError
+from nhvrcontrib.formatters import format_response
 
 
 def get_nested_value(data: dict[str, Any], path: tuple[str, ...]) -> Any:
@@ -33,7 +33,7 @@ def force_search_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _run_missing_playwright_scrape(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
-    scraper_module = pytest.importorskip("nhvr_mcp.scraper")
+    scraper_module = pytest.importorskip("nhvrcontrib.scraper")
 
     def fail_playwright():
         raise NhvrToolsError(
@@ -234,7 +234,7 @@ def test_error_user_scenarios(
             "markdown_mass_limits",
             lambda monkeypatch: (
                 "## General" in format_response(NHVR().mass_limits(include_hml=True), "markdown")
-                and "## Provenance" in format_response(NHVR().mass_limits(include_hml=True), "markdown")
+                and "_Source: [" in format_response(NHVR().mass_limits(include_hml=True), "markdown")
             ),
         ),
         (

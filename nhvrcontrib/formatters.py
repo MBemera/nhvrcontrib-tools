@@ -26,7 +26,21 @@ def format_response(data: Any, output_format: str) -> str:
 
 
 def render_markdown(data: Any, depth: int = 2) -> str:
-    return "\n".join(_render_block(data, depth))
+    provenance = None
+    content = data
+
+    if isinstance(data, dict):
+        content = dict(data)
+        provenance = content.pop("provenance", None)
+
+    lines = _render_block(content, depth)
+    footer_lines = _render_provenance_footer(provenance)
+    if footer_lines:
+        if lines:
+            lines.append("")
+        lines.extend(footer_lines)
+
+    return "\n".join(lines)
 
 
 def _render_block(data: Any, depth: int, label: str | None = None) -> list[str]:
@@ -103,3 +117,22 @@ def _stringify(value: Any) -> str:
     if isinstance(value, bool):
         return "Yes" if value else "No"
     return str(value)
+
+
+def _render_provenance_footer(provenance: Any) -> list[str]:
+    if not isinstance(provenance, dict):
+        return []
+
+    source_title = provenance.get("source_title")
+    source_url = provenance.get("deep_link_url") or provenance.get("source_url")
+    last_verified = provenance.get("last_verified")
+
+    footer_lines: list[str] = []
+    if isinstance(source_title, str) and isinstance(source_url, str) and isinstance(last_verified, str):
+        footer_lines.append(f"_Source: [{source_title}]({source_url}) (verified {last_verified})_")
+
+    unofficial_warning = provenance.get("unofficial_warning")
+    if isinstance(unofficial_warning, str) and unofficial_warning:
+        footer_lines.append(f"_{unofficial_warning}_")
+
+    return footer_lines
