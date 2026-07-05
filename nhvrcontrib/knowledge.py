@@ -10,6 +10,39 @@ from copy import deepcopy
 
 LEGISLATION_BASE_URL = "https://www.legislation.qld.gov.au/view/whole/html/inforce/current/act-2012-hvnlq"
 
+# The amended HVNL was approved by ministers in May 2026 and commences on
+# 1 August 2026. Until then the pre-amendment rules below remain in force.
+# See docs in SOURCE-VERIFICATION.md for the 1 August 2026 overhaul checklist.
+HVNL_2026_COMMENCEMENT = "1 August 2026"
+
+HVNL_2026_ACCREDITATION_NOTE = (
+    f"From {HVNL_2026_COMMENCEMENT}, the amended HVNL replaces NHVAS with the Heavy Vehicle "
+    "Accreditation (HVA) scheme, tiered as General Safety Accreditation (GSA) and Alternative "
+    "Compliance Accreditation (ACA). New NHVAS applications and added modules close from that "
+    "date; existing NHVAS accreditations remain valid until they expire, with a phased "
+    "transition of up to 3 years."
+)
+
+HVNL_2026_FATIGUE_NOTE = (
+    f"From {HVNL_2026_COMMENCEMENT}, new applications for flexible hours move from the BFM/AFM "
+    "module structure to ACA – Fatigue with Alternative Compliance Hours (ACH), including "
+    "templated tables of hours. Existing BFM/AFM accreditations remain valid until they expire. "
+    "An updated written work diary also applies from that date."
+)
+
+HVNL_2026_MASS_NOTE = (
+    f"From {HVNL_2026_COMMENCEMENT}, the amended Mass, Dimension and Loading (MDL) Regulation "
+    "raises General Mass Limits to the levels that currently apply under CML, and removes CML "
+    "as a separate category."
+)
+
+HVNL_2026_DIMENSION_NOTE = (
+    f"From {HVNL_2026_COMMENCEMENT}, the amended MDL Regulation increases the length limit for "
+    "certain combinations (including prime mover and semitrailer, and rigid truck and trailer) "
+    "from 19.0 m to 20.0 m. A proposed general height increase from 4.3 m to 4.6 m is deferred "
+    "to a future amendment and does not commence on that date."
+)
+
 FATIGUE_RULES = {
     "standard": {
         "summary": "Standard hours – default work/rest option for all drivers without BFM/AFM accreditation.",
@@ -74,6 +107,7 @@ FATIGUE_RULES = {
             "in_any_14_days": "Max 140 hours work; must have 4 night rest breaks",
         },
         "requirement": "Operator must hold NHVAS BFM accreditation.",
+        "reform_note": HVNL_2026_FATIGUE_NOTE,
     },
     "afm": {
         "summary": "Advanced Fatigue Management – tailored work/rest hours via an NHVR-assessed safety case.",
@@ -87,7 +121,22 @@ FATIGUE_RULES = {
             "Operator must hold NHVAS Fatigue Management accreditation with "
             "approved AFM work and rest hours."
         ),
+        "reform_note": HVNL_2026_FATIGUE_NOTE,
     },
+}
+
+# HML values are shared by MASS_LIMITS and HML_INFO; define them once so a
+# future verification pass cannot update one copy and miss the other.
+HML_REQUIREMENT = (
+    "Vehicles or combinations running at HML on triaxle groups must be accredited under NHVAS Mass Management, "
+    "be fitted with certified road-friendly suspension, and travel on an authorised route"
+)
+
+HML_AXLE_LIMITS = {
+    "tandem_axle_group": "17.0 t",
+    "tri_axle_group": "22.5 t",
+    "single_drive_axle_bus": "10.0 t",
+    "six_tyred_tandem_axle_group": "14.0 t",
 }
 
 MASS_LIMITS = {
@@ -109,6 +158,7 @@ MASS_LIMITS = {
             "A 26 m B-double can operate up to 62.5 t under GML if it meets "
             "axle spacing and notice conditions"
         ),
+        "reform_note": HVNL_2026_MASS_NOTE,
     },
     "cml": {
         "summary": (
@@ -125,17 +175,12 @@ MASS_LIMITS = {
             "Up to 1 t above GML for a vehicle or combination with allowable gross mass up to 55 t, "
             "or up to 2 t above GML if allowable gross mass exceeds 55 t"
         ),
+        "reform_note": HVNL_2026_MASS_NOTE,
     },
     "hml": {
         "summary": "Higher Mass Limits (HML) – increased axle group limits for eligible vehicles on authorised routes.",
-        "requirement": (
-            "Vehicles or combinations running at HML on triaxle groups must be accredited under NHVAS Mass Management, "
-            "be fitted with certified road-friendly suspension, and travel on an authorised route"
-        ),
-        "tandem_axle_group": "17.0 t",
-        "tri_axle_group": "22.5 t",
-        "single_drive_axle_bus": "10.0 t",
-        "six_tyred_tandem_axle_group": "14.0 t",
+        "requirement": HML_REQUIREMENT,
+        **HML_AXLE_LIMITS,
         "note": "Combination mass still depends on axle spacing, manufacturer limits, and notice or permit conditions",
     },
 }
@@ -179,6 +224,7 @@ DIMENSION_LIMITS = {
         "Ground clearance is a prescribed MDL dimension requirement. Check the "
         "current NHVR guidance for the relevant vehicle or trailer type."
     ),
+    "reform_note": HVNL_2026_DIMENSION_NOTE,
 }
 
 BREACH_CATEGORIES = {
@@ -279,9 +325,10 @@ ACCREDITATION_INFO = {
     "section_reference": None,
     "overview": (
         "The NHVAS is a national formal process for recognising operators with "
-        "robust safety management systems. From mid-2026, NHVAS will be "
-        "progressively replaced by the HVA scheme, with the NHVR working "
-        "towards implementation readiness by 1 July 2026."
+        "robust safety management systems. From 1 August 2026, when the amended "
+        "HVNL commences, NHVAS is progressively replaced by the HVA scheme. "
+        "New NHVAS applications close from that date, and existing NHVAS "
+        "accreditations remain valid until they expire."
     ),
     "mass": {
         "summary": "NHVAS Mass Management module.",
@@ -300,6 +347,22 @@ ACCREDITATION_INFO = {
         "summary": "NHVAS Fatigue Management module (BFM/AFM).",
         "benefit": "Access to flexible work/rest hours under BFM or tailored hours under AFM.",
         "requirement": "Audited fatigue risk management system.",
+        "reform_note": HVNL_2026_FATIGUE_NOTE,
+    },
+    "hva": {
+        "summary": (
+            "Heavy Vehicle Accreditation (HVA) – the scheme replacing NHVAS "
+            "under the amended HVNL from 1 August 2026."
+        ),
+        "tiers": (
+            "General Safety Accreditation (GSA) and Alternative Compliance "
+            "Accreditation (ACA). ACA – Fatigue provides Alternative Compliance "
+            "Hours (ACH) in place of new BFM/AFM applications."
+        ),
+        "transition": (
+            "NHVAS and HVA operate in parallel during a phased transition of up "
+            "to 3 years; existing NHVAS accreditations stay valid until expiry."
+        ),
     },
 }
 
@@ -364,22 +427,14 @@ PERMIT_TYPES = {
 HML_INFO = {
     "section_reference": None,
     "eligibility": {
-        "summary": (
-            "Vehicles or combinations running at HML on triaxle groups must be accredited under NHVAS Mass Management, "
-            "be fitted with certified road-friendly suspension, and travel on an authorised route"
-        ),
+        "summary": HML_REQUIREMENT,
         "approved_routes": "Only on routes approved by road managers for HML operations.",
         "vehicle_requirements": (
             "Certified road-friendly suspension and compliance with the "
             "relevant notice or permit conditions."
         ),
     },
-    "limits": {
-        "tandem_axle_group": "17.0 t",
-        "tri_axle_group": "22.5 t",
-        "single_drive_axles_on_buses": "10.0 t",
-        "six_tyred_tandem_axle_groups": "14.0 t",
-    },
+    "limits": dict(HML_AXLE_LIMITS),
     "application": (
         "Apply for an HML permit if you need access beyond authorised HML "
         "routes or want to use an HML vehicle configuration that is not "
@@ -392,6 +447,16 @@ LAW_AND_REGULATIONS_INFO = {
     "summary": (
         "The Heavy Vehicle National Law and associated regulations set the legal "
         "framework for heavy vehicle operations in participating jurisdictions."
+    ),
+    "amended_hvnl_2026": (
+        "Ministers approved the final amended HVNL package in May 2026 and it "
+        "commences on 1 August 2026. Headline changes include the HVA "
+        "accreditation scheme (GSA/ACA) replacing NHVAS, Alternative Compliance "
+        "Hours (ACH) replacing new BFM/AFM applications, General Mass Limits "
+        "rising to current CML levels with CML removed, a 19.0 m to 20.0 m "
+        "length increase for certain combinations, and an updated written work "
+        "diary. Until commencement, the pre-amendment rules summarised here "
+        "remain in force."
     ),
     "what_you_can_find": [
         "Heavy Vehicle National Law and regulations",

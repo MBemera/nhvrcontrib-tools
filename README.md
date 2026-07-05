@@ -9,7 +9,7 @@
 
 > This project is an independent community contribution. It is not published, operated, or endorsed by the NHVR.
 
-> HVNL reform note: the NHVR's [HVNL reform implementation page](https://www.nhvr.gov.au/law-policies/hvnl-reform-implementation) says the amended HVNL is expected to commence in mid-2026. The NHVR's HVA transition FAQs say it is working towards **1 July 2026**, subject to ministerial approval. That transition also progressively replaces NHVAS with the Heavy Vehicle Accreditation (HVA) scheme.
+> HVNL reform note: ministers approved the final amended HVNL package in May 2026 and it commences on **1 August 2026** (see the NHVR's [HVNL reform implementation page](https://www.nhvr.gov.au/law-policies/hvnl-reform-implementation)). From that date NHVAS is progressively replaced by the Heavy Vehicle Accreditation (HVA) scheme, new BFM/AFM applications are replaced by Alternative Compliance Hours (ACH), and General Mass Limits rise to current CML levels. Until commencement, the pre-amendment rules summarised by this package remain in force; affected responses carry a `reform_note` field.
 
 The upcoming `v0.4.0` release uses:
 

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Reviewed the amended HVNL (commencing 1 August 2026): updated the accreditation transition wording, added an `hva` accreditation entry (GSA/ACA/ACH), added dated `reform_note` fields to fatigue, mass, and dimension responses, and documented the 1 August 2026 knowledge-base overhaul checklist in `SOURCE-VERIFICATION.md`
+- Added search aliases for the amended HVNL terminology (`hva`, `gsa`, `aca`, `ach`, `hvnl reform`, `amended hvnl`)
+- Collapsed the eight per-topic section parser dataclasses into a single `ParsedPage` type and a generic `parse_sections_page` helper (parser function names unchanged)
+- Collapsed the per-topic `scrape_*` wrappers onto a shared `_scrape_section_page` helper
+- Deduplicated the shared HML axle values and requirement text between `MASS_LIMITS` and `HML_INFO` so future verification passes cannot update one copy and miss the other
+- Removed the redundant `nhvrcontrib.tools` pass-through layer; the MCP server now calls the service layer directly and every MCP tool has a docstring, so MCP clients finally see tool descriptions
+- Factored the repeated keyed-topic lookup logic in the service layer into one helper
+
 - Renamed MCP server display title to `NHVR Contrib Tools` so it clearly reads as the independent community contrib in MCP clients
 - Added explicit `scraped_at` UTC timestamps and `source_type` fields to live `search_regulations` and `scrape_page` outputs
 - Improved provenance rendering for static and live responses so the markdown footer surfaces source type, section reference, and verification date
