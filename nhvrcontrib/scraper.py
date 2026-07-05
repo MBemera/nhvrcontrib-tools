@@ -8,9 +8,13 @@ from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 
+from nhvrcontrib import section_parsers
 from nhvrcontrib.errors import NhvrToolsError
 
 NHVR_DOMAIN = "nhvr.gov.au"
+
+_SECTION_FIELDS = ("title", "intro", "sections")
+_SUB_SECTION_FIELDS = ("title", "intro", "sections", "sub_sections")
 
 
 @dataclass
@@ -156,49 +160,65 @@ async def scrape_nhvr_page(url: str, use_playwright: bool = False) -> PageConten
     return parse_page(url, html)
 
 
-async def scrape_dimension_requirements(url: str, use_playwright: bool = False) -> dict:
-    html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvrcontrib.section_parsers import parse_dimension_requirements
+async def _scrape_section_page(
+    url: str,
+    parser_name: str,
+    fields: tuple[str, ...],
+    use_playwright: bool = False,
+) -> dict:
+    """Fetch a page, run the named section parser, and keep the given fields.
 
-    parsed = parse_dimension_requirements(html)
-    return {
-        "title": parsed.title,
-        "intro": parsed.intro,
-        "sections": parsed.sections,
-    }
+    The parser is looked up on the module at call time so tests can
+    monkeypatch ``nhvrcontrib.section_parsers``.
+    """
+    html = await fetch_page(url, use_playwright=use_playwright)
+    parsed = getattr(section_parsers, parser_name)(html)
+    return {name: getattr(parsed, name) for name in fields}
+
+
+async def scrape_dimension_requirements(url: str, use_playwright: bool = False) -> dict:
+    return await _scrape_section_page(url, "parse_dimension_requirements", _SECTION_FIELDS, use_playwright)
 
 
 async def scrape_mass_limits(url: str, use_playwright: bool = False) -> dict:
-    html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvrcontrib.section_parsers import parse_mass_limits
+    return await _scrape_section_page(url, "parse_mass_limits", _SECTION_FIELDS, use_playwright)
 
-    parsed = parse_mass_limits(html)
-    return {
-        "title": parsed.title,
-        "intro": parsed.intro,
-        "sections": parsed.sections,
-    }
+
+async def scrape_fatigue_management(url: str, use_playwright: bool = False) -> dict:
+    return await _scrape_section_page(url, "parse_fatigue_management", _SUB_SECTION_FIELDS, use_playwright)
+
+
+async def scrape_breach_categorisation(url: str, use_playwright: bool = False) -> dict:
+    return await _scrape_section_page(url, "parse_breach_categorisation", _SUB_SECTION_FIELDS, use_playwright)
+
+
+async def scrape_speed_limits(url: str, use_playwright: bool = False) -> dict:
+    return await _scrape_section_page(url, "parse_speed_limits", _SECTION_FIELDS, use_playwright)
+
+
+async def scrape_nhvas_info(url: str, use_playwright: bool = False) -> dict:
+    return await _scrape_section_page(url, "parse_nhvas_info", _SECTION_FIELDS, use_playwright)
+
+
+async def scrape_permit_types(url: str, use_playwright: bool = False) -> dict:
+    return await _scrape_section_page(url, "parse_permit_types", _SECTION_FIELDS, use_playwright)
 
 
 async def scrape_cor_duties(url: str, use_playwright: bool = False) -> dict:
-    html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvrcontrib.section_parsers import parse_cor_duties, parse_cor_sub_page
-
-    parsed = parse_cor_duties(html)
-    result: dict = {
-        "title": parsed.title,
-        "intro": parsed.intro,
-        "sections": parsed.sections,
-        "sub_pages": parsed.sub_pages,
-    }
+    result = await _scrape_section_page(
+        url,
+        "parse_cor_duties",
+        ("title", "intro", "sections", "sub_pages"),
+        use_playwright,
+    )
 
     # Fetch key sub-pages for richer content
-    sub_page_keys = {
+    sub_page_keys: dict[str, str | None] = {
         "primary-duty": None,
         "executive-due-diligence-duty": None,
         "other-duties": None,
     }
-    for label, sub_url in parsed.sub_pages.items():
+    for sub_url in result["sub_pages"].values():
         for key in sub_page_keys:
             if key in sub_url and sub_page_keys[key] is None:
                 sub_page_keys[key] = sub_url
@@ -209,7 +229,7 @@ async def scrape_cor_duties(url: str, use_playwright: bool = False) -> dict:
         if sub_url:
             try:
                 sub_html = await fetch_page(sub_url, use_playwright=use_playwright)
-                detailed_sections[key] = parse_cor_sub_page(sub_html)
+                detailed_sections[key] = section_parsers.parse_cor_sub_page(sub_html)
             except Exception as error:
                 detailed_sections_errors[key] = _describe_scrape_error(error)
 
@@ -229,68 +249,6 @@ def _describe_scrape_error(error: Exception) -> str:
     if message:
         return message
     return error.__class__.__name__
-
-
-async def scrape_fatigue_management(url: str, use_playwright: bool = False) -> dict:
-    html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvrcontrib.section_parsers import parse_fatigue_management
-
-    parsed = parse_fatigue_management(html)
-    return {
-        "title": parsed.title,
-        "intro": parsed.intro,
-        "sections": parsed.sections,
-        "sub_sections": parsed.sub_sections,
-    }
-
-
-async def scrape_breach_categorisation(url: str, use_playwright: bool = False) -> dict:
-    html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvrcontrib.section_parsers import parse_breach_categorisation
-
-    parsed = parse_breach_categorisation(html)
-    return {
-        "title": parsed.title,
-        "intro": parsed.intro,
-        "sections": parsed.sections,
-        "sub_sections": parsed.sub_sections,
-    }
-
-
-async def scrape_speed_limits(url: str, use_playwright: bool = False) -> dict:
-    html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvrcontrib.section_parsers import parse_speed_limits
-
-    parsed = parse_speed_limits(html)
-    return {
-        "title": parsed.title,
-        "intro": parsed.intro,
-        "sections": parsed.sections,
-    }
-
-
-async def scrape_nhvas_info(url: str, use_playwright: bool = False) -> dict:
-    html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvrcontrib.section_parsers import parse_nhvas_info
-
-    parsed = parse_nhvas_info(html)
-    return {
-        "title": parsed.title,
-        "intro": parsed.intro,
-        "sections": parsed.sections,
-    }
-
-
-async def scrape_permit_types(url: str, use_playwright: bool = False) -> dict:
-    html = await fetch_page(url, use_playwright=use_playwright)
-    from nhvrcontrib.section_parsers import parse_permit_types
-
-    parsed = parse_permit_types(html)
-    return {
-        "title": parsed.title,
-        "intro": parsed.intro,
-        "sections": parsed.sections,
-    }
 
 
 def _get_async_playwright():

@@ -6,131 +6,59 @@ from dataclasses import dataclass, field
 
 from bs4 import BeautifulSoup
 
-# ---------------------------------------------------------------------------
-# Dataclasses
-# ---------------------------------------------------------------------------
+NHVR_BASE_URL = "https://www.nhvr.gov.au"
 
 
 @dataclass
-class DimensionRequirements:
+class ParsedPage:
+    """Structured content extracted from an NHVR page."""
+
     title: str
     intro: str
     sections: dict[str, str]
-
-
-@dataclass
-class MassLimits:
-    title: str
-    intro: str
-    sections: dict[str, str]
-
-
-@dataclass
-class CorDuties:
-    title: str
-    intro: str
-    sections: dict[str, str]
+    sub_sections: dict[str, dict[str, str]] = field(default_factory=dict)
     sub_pages: dict[str, str] = field(default_factory=dict)
 
 
-@dataclass
-class FatigueManagement:
-    title: str
-    intro: str
-    sections: dict[str, str]
-    sub_sections: dict[str, dict[str, str]] = field(default_factory=dict)
+def parse_sections_page(
+    html: str,
+    default_title: str,
+    *,
+    include_sub_sections: bool = False,
+    sub_page_path: str | None = None,
+) -> ParsedPage:
+    """Parse an NHVR page into intro text and h2 (optionally h2/h3) sections.
 
-
-@dataclass
-class BreachCategorisation:
-    title: str
-    intro: str
-    sections: dict[str, str]
-    sub_sections: dict[str, dict[str, str]] = field(default_factory=dict)
-
-
-@dataclass
-class SpeedLimits:
-    title: str
-    intro: str
-    sections: dict[str, str]
-
-
-@dataclass
-class NhvasInfo:
-    title: str
-    intro: str
-    sections: dict[str, str]
-
-
-@dataclass
-class PermitTypes:
-    title: str
-    intro: str
-    sections: dict[str, str]
-
-
-# ---------------------------------------------------------------------------
-# Parser functions
-# ---------------------------------------------------------------------------
-
-
-def parse_dimension_requirements(html: str) -> DimensionRequirements:
+    ``sub_page_path`` collects links whose href contains that fragment, for
+    pages that spread their content across sub-pages.
+    """
     soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.text.strip() if soup.title else "Dimension requirements"
+    title = soup.title.text.strip() if soup.title else default_title
     main = soup.find("main") or soup.body
 
     if not main:
-        return DimensionRequirements(title=title, intro="", sections={})
+        return ParsedPage(title=title, intro="", sections={})
 
-    return DimensionRequirements(
+    return ParsedPage(
         title=title,
         intro=get_intro_text(main),
         sections=get_h2_sections(main),
+        sub_sections=get_h2_h3_sections(main) if include_sub_sections else {},
+        sub_pages=_get_sub_page_links(main, sub_page_path) if sub_page_path else {},
     )
 
 
-def parse_mass_limits(html: str) -> MassLimits:
-    soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.text.strip() if soup.title else "Mass limits"
-    main = soup.find("main") or soup.body
-
-    if not main:
-        return MassLimits(title=title, intro="", sections={})
-
-    return MassLimits(
-        title=title,
-        intro=get_intro_text(main),
-        sections=get_h2_sections(main),
-    )
+def parse_dimension_requirements(html: str) -> ParsedPage:
+    return parse_sections_page(html, "Dimension requirements")
 
 
-def parse_cor_duties(html: str) -> CorDuties:
-    """Parse the Chain of Responsibility main page."""
-    soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.text.strip() if soup.title else "Chain of Responsibility"
-    main = soup.find("main") or soup.body
+def parse_mass_limits(html: str) -> ParsedPage:
+    return parse_sections_page(html, "Mass limits")
 
-    if not main:
-        return CorDuties(title=title, intro="", sections={})
 
-    # Extract sub-page links for further navigation
-    sub_pages: dict[str, str] = {}
-    for a in main.find_all("a", href=True):
-        href = a["href"]
-        if "chain-of-responsibility/" in href:
-            link_text = a.get_text(strip=True)[:80]
-            if link_text:
-                if href.startswith("/"):
-                    href = "https://www.nhvr.gov.au" + href
-                sub_pages[link_text] = href
-
-    return CorDuties(
-        title=title,
-        intro=get_intro_text(main),
-        sections=get_h2_sections(main),
-        sub_pages=sub_pages,
-    )
+def parse_cor_duties(html: str) -> ParsedPage:
+    """Parse the Chain of Responsibility main page, including sub-page links."""
+    return parse_sections_page(html, "Chain of Responsibility", sub_page_path="chain-of-responsibility/")
 
 
 def parse_cor_sub_page(html: str) -> dict[str, str]:
@@ -142,92 +70,25 @@ def parse_cor_sub_page(html: str) -> dict[str, str]:
     return get_h2_sections(main)
 
 
-def parse_fatigue_management(html: str) -> FatigueManagement:
+def parse_fatigue_management(html: str) -> ParsedPage:
     """Parse the Fatigue Management page (main or work-and-rest-requirements)."""
-    soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.text.strip() if soup.title else "Fatigue management"
-    main = soup.find("main") or soup.body
-
-    if not main:
-        return FatigueManagement(title=title, intro="", sections={})
-
-    sections = get_h2_sections(main)
-    sub_sections = get_h2_h3_sections(main)
-
-    return FatigueManagement(
-        title=title,
-        intro=get_intro_text(main),
-        sections=sections,
-        sub_sections=sub_sections,
-    )
+    return parse_sections_page(html, "Fatigue management", include_sub_sections=True)
 
 
-def parse_breach_categorisation(html: str) -> BreachCategorisation:
-    """Parse the Breach Categorisation page."""
-    soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.text.strip() if soup.title else "Breach categorisation"
-    main = soup.find("main") or soup.body
-
-    if not main:
-        return BreachCategorisation(title=title, intro="", sections={})
-
-    sections = get_h2_sections(main)
-    sub_sections = get_h2_h3_sections(main)
-
-    return BreachCategorisation(
-        title=title,
-        intro=get_intro_text(main),
-        sections=sections,
-        sub_sections=sub_sections,
-    )
+def parse_breach_categorisation(html: str) -> ParsedPage:
+    return parse_sections_page(html, "Breach categorisation", include_sub_sections=True)
 
 
-def parse_speed_limits(html: str) -> SpeedLimits:
-    """Parse the Speed/Speeding page."""
-    soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.text.strip() if soup.title else "Speed limits"
-    main = soup.find("main") or soup.body
-
-    if not main:
-        return SpeedLimits(title=title, intro="", sections={})
-
-    return SpeedLimits(
-        title=title,
-        intro=get_intro_text(main),
-        sections=get_h2_sections(main),
-    )
+def parse_speed_limits(html: str) -> ParsedPage:
+    return parse_sections_page(html, "Speed limits")
 
 
-def parse_nhvas_info(html: str) -> NhvasInfo:
-    """Parse the NHVAS page."""
-    soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.text.strip() if soup.title else "NHVAS"
-    main = soup.find("main") or soup.body
-
-    if not main:
-        return NhvasInfo(title=title, intro="", sections={})
-
-    return NhvasInfo(
-        title=title,
-        intro=get_intro_text(main),
-        sections=get_h2_sections(main),
-    )
+def parse_nhvas_info(html: str) -> ParsedPage:
+    return parse_sections_page(html, "NHVAS")
 
 
-def parse_permit_types(html: str) -> PermitTypes:
-    """Parse the Access Permits page."""
-    soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.text.strip() if soup.title else "Access permits"
-    main = soup.find("main") or soup.body
-
-    if not main:
-        return PermitTypes(title=title, intro="", sections={})
-
-    return PermitTypes(
-        title=title,
-        intro=get_intro_text(main),
-        sections=get_h2_sections(main),
-    )
+def parse_permit_types(html: str) -> ParsedPage:
+    return parse_sections_page(html, "Access permits")
 
 
 # ---------------------------------------------------------------------------
@@ -283,3 +144,18 @@ def get_section_text(heading, stop_tags: set[str] | None = None) -> str:
         if sibling.name in {"p", "ul", "ol"}:
             content_parts.append(sibling.get_text(" ", strip=True))
     return "\n".join(content_parts).strip()
+
+
+def _get_sub_page_links(main, path_fragment: str) -> dict[str, str]:
+    sub_pages: dict[str, str] = {}
+    for anchor in main.find_all("a", href=True):
+        href = anchor["href"]
+        if path_fragment not in href:
+            continue
+        link_text = anchor.get_text(strip=True)[:80]
+        if not link_text:
+            continue
+        if href.startswith("/"):
+            href = NHVR_BASE_URL + href
+        sub_pages[link_text] = href
+    return sub_pages

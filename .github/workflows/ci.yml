@@ -14,7 +14,7 @@ jobs:
         include:
           - profile: base
             install: pip install -e .
-            verify: python -c "import nhvrcontrib, nhvrcontrib.sdk, nhvrcontrib.tools, nhvrcontrib.scraper; print('base-ok')"
+            verify: python -c "import nhvrcontrib, nhvrcontrib.sdk, nhvrcontrib.service, nhvrcontrib.scraper; print('base-ok')"
           - profile: cli
             install: pip install -e ".[cli]"
             verify: python -m nhvrcontrib.cli --help
@@ -101,7 +101,7 @@ jobs:
         run: |
           python -m venv .package-smoke
           .package-smoke/bin/pip install dist/*.whl click fastmcp "pydantic>=2.0"
-          .package-smoke/bin/python -c "import nhvrcontrib, nhvrcontrib.sdk, nhvrcontrib.tools, nhvrcontrib.scraper; print('artifact-base-ok')"
+          .package-smoke/bin/python -c "import nhvrcontrib, nhvrcontrib.sdk, nhvrcontrib.service, nhvrcontrib.scraper; print('artifact-base-ok')"
           .package-smoke/bin/python -c "from nhvrcontrib.server import mcp; print(type(mcp).__name__)"
           .package-smoke/bin/nhvr --help
           .package-smoke/bin/nhvr-setup --help

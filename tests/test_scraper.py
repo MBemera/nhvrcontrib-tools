@@ -4,7 +4,7 @@ import pytest
 
 from nhvrcontrib import scraper
 from nhvrcontrib.errors import NhvrToolsError
-from nhvrcontrib.section_parsers import CorDuties
+from nhvrcontrib.section_parsers import ParsedPage
 
 
 @pytest.mark.parametrize(
@@ -40,7 +40,7 @@ def test_scrape_cor_duties_reports_partial_sub_page_failures(monkeypatch: pytest
     monkeypatch.setattr(
         section_parsers,
         "parse_cor_duties",
-        lambda html: CorDuties(
+        lambda html: ParsedPage(
             title="Chain of Responsibility",
             intro="Intro",
             sections={"Overview": "Summary"},

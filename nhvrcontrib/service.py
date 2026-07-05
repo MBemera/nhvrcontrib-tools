@@ -42,15 +42,7 @@ def get_dimension_limits_data() -> dict[str, Any]:
 
 
 def get_breach_categories_data(breach_type: str | None = None) -> dict[str, Any]:
-    if breach_type is None:
-        return attach_provenance(BREACH_CATEGORIES, "breach_categories")
-    if breach_type not in BREACH_CATEGORIES or _is_metadata_key(breach_type):
-        return _invalid_choice("breach type", breach_type, BREACH_CATEGORIES.keys())
-    data = _with_section_reference(
-        {breach_type: BREACH_CATEGORIES[breach_type]},
-        BREACH_CATEGORIES.get("section_reference"),
-    )
-    return attach_provenance(data, "breach_categories")
+    return _get_topic_entry_data(BREACH_CATEGORIES, breach_type, "breach type", "breach_categories")
 
 
 def get_speed_limits_data() -> dict[str, Any]:
@@ -58,30 +50,15 @@ def get_speed_limits_data() -> dict[str, Any]:
 
 
 def get_cor_duties_data(role: str | None = None) -> dict[str, Any]:
-    if role is None:
-        return attach_provenance(COR_DUTIES, "cor_duties")
-    if role not in COR_DUTIES or _is_metadata_key(role):
-        return _invalid_choice("CoR role", role, COR_DUTIES.keys())
-    data = _with_section_reference({role: COR_DUTIES[role]}, COR_DUTIES.get("section_reference"))
-    return attach_provenance(data, "cor_duties")
+    return _get_topic_entry_data(COR_DUTIES, role, "CoR role", "cor_duties")
 
 
 def get_accreditation_info_data(module: str | None = None) -> dict[str, Any]:
-    if module is None:
-        return attach_provenance(ACCREDITATION_INFO, "accreditation_info")
-    if module not in ACCREDITATION_INFO or _is_metadata_key(module):
-        return _invalid_choice("accreditation module", module, ACCREDITATION_INFO.keys())
-    data = _with_section_reference({module: ACCREDITATION_INFO[module]}, ACCREDITATION_INFO.get("section_reference"))
-    return attach_provenance(data, "accreditation_info")
+    return _get_topic_entry_data(ACCREDITATION_INFO, module, "accreditation module", "accreditation_info")
 
 
 def get_permit_types_data(permit_type: str | None = None) -> dict[str, Any]:
-    if permit_type is None:
-        return attach_provenance(PERMIT_TYPES, "permit_types")
-    if permit_type not in PERMIT_TYPES or _is_metadata_key(permit_type):
-        return _invalid_choice("permit type", permit_type, PERMIT_TYPES.keys())
-    data = _with_section_reference({permit_type: PERMIT_TYPES[permit_type]}, PERMIT_TYPES.get("section_reference"))
-    return attach_provenance(data, "permit_types")
+    return _get_topic_entry_data(PERMIT_TYPES, permit_type, "permit type", "permit_types")
 
 
 def get_hml_info_data() -> dict[str, Any]:
@@ -268,6 +245,21 @@ def _friendly_error_message(error: Exception) -> str:
     if isinstance(error, NhvrToolsError):
         return error.message
     return "Live NHVR content was unavailable, so a built-in knowledge response was returned instead."
+
+
+def _get_topic_entry_data(
+    topic: dict[str, Any],
+    entry_key: str | None,
+    label: str,
+    knowledge_key: str,
+) -> dict[str, Any]:
+    """Return a whole knowledge topic, or one named entry within it."""
+    if entry_key is None:
+        return attach_provenance(topic, knowledge_key)
+    if entry_key not in topic or _is_metadata_key(entry_key):
+        return _invalid_choice(label, entry_key, topic.keys())
+    data = _with_section_reference({entry_key: topic[entry_key]}, topic.get("section_reference"))
+    return attach_provenance(data, knowledge_key)
 
 
 def _invalid_choice(label: str, value: str, options: Any) -> dict[str, Any]:
