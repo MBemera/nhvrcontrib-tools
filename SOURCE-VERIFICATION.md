@@ -2,6 +2,43 @@
 
 Manual verification pass completed on `2026-04-11` against current official NHVR material.
 
+## HVNL 2026 Review (`2026-07-05`)
+
+A follow-up review assessed the amended HVNL against the built-in knowledge base:
+
+- Ministers approved the final amended HVNL package in May 2026. The amended law and
+  supporting instruments commence on **1 August 2026** (previous guidance said "working
+  towards 1 July 2026").
+- The knowledge base intentionally continues to describe the **pre-amendment law**, which
+  remains in force until 31 July 2026. Affected entries now carry a `reform_note` field, and
+  `ACCREDITATION_INFO` gained an `hva` entry describing the new scheme.
+
+### Overhaul checklist for 1 August 2026
+
+Run the full manual audit and apply these changes when the amended law commences:
+
+- **Accreditation**: make HVA (GSA/ACA) the primary content; describe NHVAS as legacy in
+  transition (existing accreditations valid until expiry, up to 3 years).
+- **Fatigue**: BFM/AFM close to new applications; document ACA – Fatigue with Alternative
+  Compliance Hours (ACH) and templated tables of hours; note the updated written work diary.
+  Re-verify all work/rest tables against the post-commencement NHVR pages.
+- **Mass limits**: raise GML entries to the levels formerly published as CML; remove the CML
+  entry (category removed from the MDL Regulation); re-verify HML interactions.
+- **Dimensions**: update the 19.0 m combination length entries to 20.0 m where they apply to
+  prime mover and semitrailer, and rigid truck and trailer combinations. Do **not** change the
+  4.3 m height limit — the 4.6 m increase is deferred to a future amendment; re-check its
+  status.
+- **Breach categories / CoR / permits / speed**: re-verify against the post-commencement
+  pages; no confirmed structural changes were identified in this review.
+- Refresh every `last_verified` date, the deep-link anchors into the Queensland legislation
+  view (section numbering may change), and remove the pre-commencement `reform_note` fields.
+
+Sources for this review: NHVR HVNL reform implementation page, NHVR "Mass, Dimension and
+Loading changes" fact sheet (commencement 1 August 2026), NHVR HVA transition FAQs, NTC HVNL
+reform pages, and industry coverage corroborating commencement and scheme details. Direct
+fetches of nhvr.gov.au were blocked from the audit environment, so figures were only recorded
+where at least two independent sources agreed; anything less stayed out of the knowledge base.
+
 ## Scope
 
 The built-in knowledge base was reviewed against current NHVR guidance for:

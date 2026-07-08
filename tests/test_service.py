@@ -5,11 +5,11 @@ from nhvrcontrib import service
 from nhvrcontrib.errors import NhvrToolsError
 
 
-def test_tools_import_path_is_clean() -> None:
-    tools_module = importlib.import_module("nhvrcontrib.tools")
+def test_service_import_path_is_clean() -> None:
+    service_module = importlib.import_module("nhvrcontrib.service")
     sdk_module = importlib.import_module("nhvrcontrib.sdk")
 
-    assert hasattr(tools_module, "get_fatigue_rules")
+    assert hasattr(service_module, "get_fatigue_rules_data")
     assert hasattr(sdk_module, "NHVR")
 
 

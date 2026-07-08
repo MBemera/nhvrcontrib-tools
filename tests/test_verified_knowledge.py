@@ -58,7 +58,24 @@ def test_accreditation_overview_matches_current_transition_guidance() -> None:
     overview = ACCREDITATION_INFO["overview"]
 
     assert "progressively replaced by the HVA scheme" in overview
-    assert "1 July 2026" in overview
+    assert "1 August 2026" in overview
+
+
+def test_hvnl_2026_reform_notes_are_present_and_dated() -> None:
+    assert "1 August 2026" in FATIGUE_RULES["bfm"]["reform_note"]
+    assert "ACH" in FATIGUE_RULES["afm"]["reform_note"]
+    assert "General Mass Limits" in MASS_LIMITS["general"]["reform_note"]
+    assert "20.0 m" in DIMENSION_LIMITS["reform_note"]
+    assert "4.6 m is deferred" in DIMENSION_LIMITS["reform_note"]
+    assert "GSA" in ACCREDITATION_INFO["hva"]["tiers"]
+
+
+def test_hml_values_are_shared_between_mass_limits_and_hml_info() -> None:
+    from nhvrcontrib.knowledge import HML_AXLE_LIMITS
+
+    for key, value in HML_AXLE_LIMITS.items():
+        assert MASS_LIMITS["hml"][key] == value
+        assert HML_INFO["limits"][key] == value
 
 
 def test_permit_summaries_match_current_vehicle_class_guidance() -> None:
